@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <meta name="theme-color" content="#0b0f17" />
+    <title>Car Racing</title>
+    <link rel="stylesheet" href="./styles.css" />
+</head>
+
+<body>
+    <noscript>
+        <div style="padding:16px;font-family:system-ui;">
+            This game requires JavaScript enabled.
+        </div>
+    </noscript>
+
+    <div id="app">
+        <header class="topbar">
+            <div class="brand" aria-label="Car Racing">
+                <span class="brand-dot" aria-hidden="true"></span>
+                <span class="brand-text">Car Racing</span>
+            </div>
+
+            <div class="hint" aria-label="Controls">
+                Controls: <kbd>WASD</kbd> / <kbd>Arrows</kbd> • <kbd>R</kbd> Restart
+            </div>
+        </header>
+
+        <main class="stage">
+            <canvas id="game" width="1280" height="720" aria-label="Car racing game canvas">
+                Your browser does not support the canvas element.
+            </canvas>
+
+            <!-- Overlay UI (acts like a modal) -->
+            <div id="overlay" class="overlay" role="dialog" aria-modal="true" aria-label="Game menu">
+                <!-- Login -->
+                <section id="screen-login" class="screen active" aria-labelledby="loginTitle">
+                    <h1 id="loginTitle">Welcome</h1>
+                    <p class="muted">Enter your name to start racing.</p>
+
+                    <input id="nameInput" class="input" placeholder="Your name" maxlength="40" autocomplete="name"
+                        autofocus spellcheck="false" enterkeyhint="done" />
+
+                    <button id="loginBtn" class="btn primary" type="button">Continue</button>
+                    <p class="micro">Tip: Finish <strong>1st</strong> to unlock the next level.</p>
+                </section>
+
+                <!-- Car select -->
+                <section id="screen-car" class="screen" aria-labelledby="carTitle">
+                    <h1 id="carTitle">Choose your car</h1>
+                    <p class="muted">Pick a color. Then race to <strong>1st place</strong>.</p>
+
+                    <div class="car-row" role="listbox" aria-label="Car colors">
+                        <button class="car-btn" data-color="blue" type="button" role="option" aria-selected="false">
+                            <span class="chip blue" aria-hidden="true"></span>
+                            <span class="car-label">Blue</span>
+                            <span class="car-sub">Balanced</span>
+                        </button>
+
+                        <button class="car-btn" data-color="red" type="button" role="option" aria-selected="false">
+                            <span class="chip red" aria-hidden="true"></span>
+                            <span class="car-label">Red</span>
+                            <span class="car-sub">Aggressive</span>
+                        </button>
+
+                        <button class="car-btn" data-color="yellow" type="button" role="option" aria-selected="false">
+                            <span class="chip yellow" aria-hidden="true"></span>
+                            <span class="car-label">Yellow</span>
+                            <span class="car-sub">Responsive</span>
+                        </button>
+                    </div>
+
+                    <button id="startBtn" class="btn primary" type="button" disabled>Start Race</button>
+
+                    <p class="micro muted">
+                        Note: car shapes are randomized (kart / f1 / rally).
+                    </p>
+                </section>
+
+                <!-- Result -->
+                <section id="screen-result" class="screen" aria-labelledby="resultTitle">
+                    <h1 id="resultTitle">Result</h1>
+                    <p id="resultText" class="muted"></p>
+                    <div class="row">
+                        <button id="nextLevelBtn" class="btn primary" type="button">Next Level</button>
+                        <button id="restartBtn" class="btn" type="button">Restart</button>
+                    </div>
+                </section>
+
+                <!-- Game Over -->
+                <section id="screen-over" class="screen" aria-labelledby="overTitle">
+                    <h1 id="overTitle">Game Over</h1>
+                    <p id="overText" class="muted"></p>
+                    <button id="restartBtnOver" class="btn primary" type="button">Restart</button>
+                </section>
+            </div>
+
+            <!-- HUD (in-race) -->
+            <div id="hud" class="hud hidden" aria-live="polite">
+                <div class="hud-left">
+                    <div class="hud-name">
+                        <strong id="hudName">Player</strong>
+                        <span class="pill">LEVEL <span id="hudLevel">1</span></span>
+                    </div>
+                    <div class="hud-mini muted">Win the race to continue</div>
+                </div>
+
+                <div class="hud-right">
+                    <div>Position: <span id="hudPos">-</span>/<span id="hudTotal">5</span></div>
+                    <div>Speed: <span id="hudSpeed">0</span></div>
+                    <div>Progress: <span id="hudProg">0%</span></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script type="module" src="./src/main.js"></script>
+</body>
+
+</html>

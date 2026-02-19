@@ -9,7 +9,7 @@ This project demonstrates advanced frontend architecture, procedural track gener
 ## 🚀 Live Demo
 
 👉 Deployed on Netlify  
-(Add your live URL here)
+([Add your live URL here](https://2d-car-game1.netlify.app/))
 
 ---
 
@@ -33,31 +33,6 @@ This project demonstrates advanced frontend architecture, procedural track gener
 - JavaScript (ES6 Modules)
 - Modern CSS (glass / minimal AAA UI styling)
 - No external frameworks or libraries
-
----
-
-## 📁 Project Structure
-
-```
-/src
-  /core
-    Game.js
-    update.js
-  /track
-    track.js
-    geometry.js
-  /entities
-    Car.js
-  /render
-    carRenderer.js
-  /scenery
-    scenery.js
-  /utils
-    math.js
-    draw.js
-index.html
-styles.css
-```
 
 ---
 
@@ -110,17 +85,6 @@ Deploy easily to:
 - Netlify
 
 No backend required.
-
----
-
-## ✨ Future Improvements
-
-- 🔊 Sound engine  
-- 🏎️ Car damage system  
-- 📱 Mobile touch controls  
-- 🌍 Multiple track themes  
-- 🏆 Leaderboard system  
-- ⚡ WebGL version  
 
 ---
 

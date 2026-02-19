@@ -16,10 +16,18 @@
         </div>
     </noscript>
 
-    <div id="app">
+    <!-- LANDING (full page bg + bottom center START button) -->
+    <div id="landing" class="landing" role="dialog" aria-modal="true" aria-label="Start screen">
+        <button id="landingStartBtn" class="btn primary landing-start" type="button">
+            START
+        </button>
+    </div>
+
+    <!-- PLAYABLE APP (hidden until START clicked) -->
+    <div id="app" class="app hidden">
         <header class="topbar">
             <div class="brand" aria-label="Car Racing">
-                <span class="brand-dot" aria-hidden="true"></span>
+                <img class="brand-logo" src="./img/logo.png" alt="Car Racing logo" />
                 <span class="brand-text">Car Racing</span>
             </div>
 
@@ -115,6 +123,34 @@
             </div>
         </main>
     </div>
+
+    <!-- Start screen logic (simple + reliable) -->
+    <script>
+        (function () {
+            const landing = document.getElementById("landing");
+            const app = document.getElementById("app");
+            const btn = document.getElementById("landingStartBtn");
+            const nameInput = document.getElementById("nameInput");
+
+            function start() {
+                landing.classList.add("hidden");
+                app.classList.remove("hidden");
+                // focus name input for smooth UX
+                setTimeout(() => nameInput?.focus?.(), 50);
+            }
+
+            btn?.addEventListener("click", start);
+
+            // allow Enter to start
+            window.addEventListener("keydown", (e) => {
+                if (!landing || landing.classList.contains("hidden")) return;
+                if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    start();
+                }
+            });
+        })();
+    </script>
 
     <script type="module" src="./src/main.js"></script>
 </body>

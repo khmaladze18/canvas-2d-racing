@@ -1,9 +1,11 @@
+// src/Game.js
 import { STATES } from "./constants.js";
 import { createInput, bindKeys } from "./input.js";
 import { bindUI } from "./uiBindings.js";
 import { startLevel } from "./level.js";
 import { update } from "./update.js";
 import { render } from "./render.js";
+import { createTrafficManager } from "../entities/trafic/traffic.js";
 
 export class Game {
     constructor({ canvas, ctx, ui }) {
@@ -22,6 +24,9 @@ export class Game {
         this.player = null;
         this.bots = [];
         this.all = [];
+
+        // ✅ Traffic obstacle system (created once, reset per run/level)
+        this.traffic = createTrafficManager(this);
 
         this.cameraY = 0;
         this.input = createInput();
@@ -51,7 +56,6 @@ export class Game {
         return this.state === "PLAY" || this.state === "RESULT";
     }
 
-
     startBoot() {
         this.ui.showLogin();
         this._loop(performance.now());
@@ -60,10 +64,17 @@ export class Game {
     restartRun() {
         this.level = 1;
         this.bestLevel = 1;
+
+        // ✅ reset traffic for a clean run
+        this.traffic?.reset?.();
+
         this.startLevel(1);
     }
 
     startLevel(level) {
+        // ✅ reset traffic when starting a new level (new track)
+        this.traffic?.reset?.();
+
         startLevel(this, level);
     }
 

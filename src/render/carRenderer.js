@@ -1,10 +1,20 @@
+// src/render/carRenderer.js
 import { roundRect } from "../utils/draw.js";
 import { shade, clamp } from "../utils/math.js";
 
+/**
+ * - supports named colors + direct CSS colors (#rgb / rgb() / hsl())
+ * - adds special styling for traffic/obstacle cars (grey + hazard stripe)
+ */
 function carColor(c) {
+    if (typeof c === "string" && (c.startsWith("#") || c.startsWith("rgb") || c.startsWith("hsl"))) {
+        return c;
+    }
     if (c === "blue") return "#3b82f6";
     if (c === "red") return "#ef4444";
     if (c === "yellow") return "#f59e0b";
+    if (c === "green") return "#22c55e";
+    if (c === "grey" || c === "gray") return "#9ca3af";
     return "#9ca3af";
 }
 
@@ -61,20 +71,47 @@ function headlights(ctx, x, y, w, h, a = 0.9) {
     ctx.restore();
 }
 
-function taillights(ctx, glow) {
+function taillights(ctx, glow, isTraffic = false) {
     ctx.save();
-    ctx.globalAlpha = 0.55 + 0.35 * glow;
+    // traffic: slightly dimmer tail
+    const baseA = isTraffic ? 0.38 : 0.55;
+    const boostA = isTraffic ? 0.25 : 0.35;
+    ctx.globalAlpha = baseA + boostA * glow;
     ctx.fillStyle = "rgba(255,80,80,0.85)";
     ctx.fillRect(-9.4, 13.4, 4.6, 3.1);
     ctx.fillRect(4.8, 13.4, 4.6, 3.1);
     ctx.restore();
 }
 
+function hazardStripe(ctx) {
+    // subtle diagonal hazard stripe for obstacle cars
+    ctx.save();
+    ctx.globalAlpha = 0.18;
+    ctx.fillStyle = "rgba(0,0,0,0.55)";
+    ctx.beginPath();
+    ctx.moveTo(-10, -6);
+    ctx.lineTo(10, -16);
+    ctx.lineTo(10, -10);
+    ctx.lineTo(-10, 0);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.globalAlpha = 0.12;
+    ctx.fillStyle = "rgba(255,255,255,0.60)";
+    ctx.beginPath();
+    ctx.moveTo(-10, 2);
+    ctx.lineTo(10, -8);
+    ctx.lineTo(10, -4);
+    ctx.lineTo(-10, 6);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+}
+
 /* =========================
    MODEL: KART
    ========================= */
-function drawKart(ctx, base) {
-    // wheels
+function drawKart(ctx, base, isTraffic = false) {
     wheel(ctx, -15, -11);
     wheel(ctx, 15, -11);
     wheel(ctx, -15, 11);
@@ -122,9 +159,10 @@ function drawKart(ctx, base) {
     for (let i = -8; i <= 8; i += 4) ctx.fillRect(i, -16.9, 1.8, 3.2);
     ctx.globalAlpha = 1;
 
-    // headlights
-    headlights(ctx, -9.3, -16.6, 4.4, 3.2);
-    headlights(ctx, 4.9, -16.6, 4.4, 3.2);
+    // headlights (traffic: dim)
+    const ha = isTraffic ? 0.55 : 0.90;
+    headlights(ctx, -9.3, -16.6, 4.4, 3.2, ha);
+    headlights(ctx, 4.9, -16.6, 4.4, 3.2, ha);
 
     // spoiler
     ctx.fillStyle = "rgba(0,0,0,0.22)";
@@ -133,13 +171,14 @@ function drawKart(ctx, base) {
     ctx.fillStyle = "rgba(255,255,255,0.10)";
     roundRect(ctx, -11.2, 13.6, 22.4, 3.2, 3);
     ctx.fill();
+
+    if (isTraffic) hazardStripe(ctx);
 }
 
 /* =========================
    MODEL: F1
    ========================= */
-function drawF1(ctx, base) {
-    // wheels wider + larger (F1)
+function drawF1(ctx, base, isTraffic = false) {
     wheel(ctx, -18, -13, 1.18);
     wheel(ctx, 18, -13, 1.18);
     wheel(ctx, -17, 13, 1.12);
@@ -163,12 +202,12 @@ function drawF1(ctx, base) {
     roundRect(ctx, -10.1, -21.4, 20.2, 42.8, 11);
     ctx.fill();
 
-    // sidepods (wide mid)
+    // sidepods
     ctx.fillStyle = "rgba(0,0,0,0.15)";
     roundRect(ctx, -14.4, -10.2, 28.8, 20.4, 9);
     ctx.fill();
 
-    // nose cone (front)
+    // nose cone
     ctx.fillStyle = "rgba(0,0,0,0.18)";
     roundRect(ctx, -6.6, -28.0, 13.2, 11.2, 7);
     ctx.fill();
@@ -199,15 +238,17 @@ function drawF1(ctx, base) {
     ctx.fillStyle = "rgba(255,255,255,0.10)";
     ctx.fillRect(-1.2, -21.0, 2.4, 42.0);
 
-    // headlights hint
-    headlights(ctx, -6.4, -24.0, 3.0, 2.4, 0.75);
-    headlights(ctx, 3.4, -24.0, 3.0, 2.4, 0.75);
+    const ha = isTraffic ? 0.45 : 0.75;
+    headlights(ctx, -6.4, -24.0, 3.0, 2.4, ha);
+    headlights(ctx, 3.4, -24.0, 3.0, 2.4, ha);
+
+    if (isTraffic) hazardStripe(ctx);
 }
 
 /* =========================
-   MODEL: RALLY (hatch)
+   MODEL: RALLY
    ========================= */
-function drawRally(ctx, base) {
+function drawRally(ctx, base, isTraffic = false) {
     wheel(ctx, -14.5, -11.5);
     wheel(ctx, 14.5, -11.5);
     wheel(ctx, -14.0, 11.5);
@@ -255,18 +296,37 @@ function drawRally(ctx, base) {
     roundRect(ctx, -11.4, -18.9, 22.8, 6.8, 3.6);
     ctx.fill();
 
-    // bigger headlights
-    headlights(ctx, -10.0, -16.4, 5.4, 3.7);
-    headlights(ctx, 4.6, -16.4, 5.4, 3.7);
+    const ha = isTraffic ? 0.55 : 0.90;
+    headlights(ctx, -10.0, -16.4, 5.4, 3.7, ha);
+    headlights(ctx, 4.6, -16.4, 5.4, 3.7, ha);
 
     // rally stripe offset
     ctx.fillStyle = "rgba(255,255,255,0.10)";
     ctx.fillRect(-4.2, -16.8, 2.8, 33.6);
+
+    if (isTraffic) hazardStripe(ctx);
+}
+
+function drawBadge(ctx, text) {
+    ctx.save();
+    ctx.globalAlpha = 0.95;
+    ctx.fillStyle = "rgba(0,0,0,0.40)";
+    roundRect(ctx, -16, -33, 32, 11, 6);
+    ctx.fill();
+    ctx.fillStyle = "rgba(255,255,255,0.92)";
+    ctx.font = "700 7.5px system-ui, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(text, 0, -27.3);
+    ctx.restore();
 }
 
 export function drawCar(ctx, car, cameraY) {
     const sx = car.x;
     const sy = car.y - cameraY;
+
+    // cull super-offscreen cars (cheap)
+    if (sy < -240 || sy > ctx.canvas.height + 240) return;
 
     ctx.save();
     ctx.translate(sx, sy);
@@ -282,22 +342,25 @@ export function drawCar(ctx, car, cameraY) {
     ctx.fill();
     ctx.globalAlpha = 1;
 
-    ctx.scale(1.08, 1.08);
+    // Traffic slightly smaller to read as obstacle
+    const isTraffic = !!car.isTraffic;
+    const scale = (car.renderScale ?? (isTraffic ? 1.12 : 1.08));
+    ctx.scale(scale, scale);
 
     const base = carColor(car.color);
 
-    // speed glow
+    // speed glow (traffic: weaker)
     const g = clamp(car.speed / (car.maxSpeed || 1), 0, 1);
-    if (g > 0.15) speedGlow(ctx, base, g);
+    const glow = isTraffic ? g * 0.55 : g;
+    if (glow > 0.15) speedGlow(ctx, base, glow);
 
-    // draw selected model
-    if (car.model === "f1") drawF1(ctx, base);
-    else if (car.model === "rally") drawRally(ctx, base);
-    else drawKart(ctx, base);
+    if (car.model === "f1") drawF1(ctx, base, isTraffic);
+    else if (car.model === "rally") drawRally(ctx, base, isTraffic);
+    else drawKart(ctx, base, isTraffic);
 
     // taillights more visible at low speed
     const brakeGlow = clamp(1 - (car.speed / (car.maxSpeed || 1)), 0, 1);
-    taillights(ctx, brakeGlow);
+    taillights(ctx, brakeGlow, isTraffic);
 
     // spec edge
     ctx.globalAlpha = 0.20;
@@ -309,19 +372,9 @@ export function drawCar(ctx, car, cameraY) {
     ctx.globalAlpha = 1;
 
     // badge
-    if (car.isPlayer) {
-        ctx.save();
-        ctx.globalAlpha = 0.95;
-        ctx.fillStyle = "rgba(0,0,0,0.40)";
-        roundRect(ctx, -16, -33, 32, 11, 6);
-        ctx.fill();
-        ctx.fillStyle = "rgba(255,255,255,0.92)";
-        ctx.font = "700 7.5px system-ui, sans-serif";
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillText("YOU", 0, -27.3);
-        ctx.restore();
-    }
+    if (car.isPlayer) drawBadge(ctx, "YOU");
+    // Optional: show tiny TRAFFIC label for debugging
+    // else if (isTraffic) drawBadge(ctx, "TRAFFIC");
 
     ctx.restore();
 }

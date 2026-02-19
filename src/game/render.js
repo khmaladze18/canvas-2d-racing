@@ -23,8 +23,13 @@ export function render(game) {
     const focusIdx = game.player?.trackIdxHint ?? 80;
     game.track.draw(ctx, game.cameraY, focusIdx);
 
-    const drawList = [...game.all].sort((a, b) => a.y - b.y);
-    for (const c of drawList) c.draw(ctx, game.cameraY);
+    // ✅ draw everything that can appear on road (player + bots + traffic)
+    const traffic = game.traffic?.cars || [];
+    const colliders = [game.player, ...game.bots, ...traffic].filter(Boolean);
+
+    // draw in Y-order for correct overlap
+    colliders.sort((a, b) => a.y - b.y);
+    for (const c of colliders) c.draw?.(ctx, game.cameraY);
 
     const g = ctx.createRadialGradient(w / 2, h / 2, h * 0.2, w / 2, h / 2, h * 0.85);
     g.addColorStop(0, "rgba(0,0,0,0)");

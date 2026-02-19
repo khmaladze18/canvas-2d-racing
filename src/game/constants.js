@@ -1,20 +1,37 @@
-export const STATES = {
+// -----------------------------
+// Game States
+// -----------------------------
+
+export const STATES = Object.freeze({
     LOGIN: "LOGIN",
-    CAR: "CAR",
+    CAR_SELECT: "CAR_SELECT",
     RACE: "RACE",
     RESULT: "RESULT",
-    OVER: "OVER",
-};
+    GAME_OVER: "GAME_OVER",
+});
 
-export const SPAWN_INDEX = 80;
+// -----------------------------
+// Race Setup
+// -----------------------------
 
-// Must match your Track grid drawing
-export const GRID = {
+export const RACE_CONFIG = Object.freeze({
+    SPAWN_INDEX: 80,
+    BOT_COUNT: 4,
+});
+
+// -----------------------------
+// Track Grid (must match Track drawing logic)
+// -----------------------------
+
+export const GRID = Object.freeze({
     laneX: 22,
     rowY: 34,
-};
+});
 
-// total cars = 5 (player + 4 bots)
-export const BOT_COUNT = 4;
+// -----------------------------
+// Bot Visual Configuration
+// -----------------------------
 
-export const BOT_COLORS = ["red", "blue", "yellow", "red", "blue", "yellow"];
+export const BOT_CONFIG = Object.freeze({
+    COLORS: ["#ff3b3b", "#2d7dff", "#ffd400", "#00d47a"],
+});

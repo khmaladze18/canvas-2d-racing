@@ -74,8 +74,6 @@ Using VS Code:
 2. Open `index.html`
 3. Start Live Server
 
-Or via terminal:
-
 ---
 
 ## 🌍 Deployment

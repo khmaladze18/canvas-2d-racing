@@ -1,3 +1,5 @@
+<img width="1912" height="937" alt="image" src="https://github.com/user-attachments/assets/21cb2554-2aa6-4eae-869f-cf505ef4bf5f" />
+
 # 🏎️ Car Racing — Modern Canvas Game
 
 A modular 2D racing game built with **Vanilla JavaScript (ES Modules)** and **HTML5 Canvas**.
@@ -9,7 +11,7 @@ This project demonstrates advanced frontend architecture, procedural track gener
 ## 🚀 Live Demo
 
 👉 Deployed on Netlify  
-([Add your live URL here](https://2d-car-game1.netlify.app/))
+([live URL here](https://2d-car-game1.netlify.app/))
 
 ---
 

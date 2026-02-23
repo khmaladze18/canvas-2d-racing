@@ -1,380 +1,178 @@
-// src/render/carRenderer.js
 import { roundRect } from "../utils/draw.js";
-import { shade, clamp } from "../utils/math.js";
+import { shade } from "../utils/math.js";
 
 /**
- * - supports named colors + direct CSS colors (#rgb / rgb() / hsl())
- * - adds special styling for traffic/obstacle cars (grey + hazard stripe)
+ * Enhanced Color Palette
  */
 function carColor(c) {
-    if (typeof c === "string" && (c.startsWith("#") || c.startsWith("rgb") || c.startsWith("hsl"))) {
-        return c;
-    }
-    if (c === "blue") return "#3b82f6";
-    if (c === "red") return "#ef4444";
-    if (c === "yellow") return "#f59e0b";
-    if (c === "green") return "#22c55e";
-    if (c === "grey" || c === "gray") return "#9ca3af";
-    return "#9ca3af";
+    const palette = {
+        blue: "#2563eb",
+        red: "#dc2626",
+        yellow: "#fbbf24",
+        green: "#16a34a",
+        grey: "#4b5563",
+        black: "#111827",
+        white: "#f8fafc"
+    };
+    if (typeof c === "string" && (c.startsWith("#") || c.startsWith("rgb"))) return c;
+    return palette[c] || palette.grey;
 }
 
-function glossyFill(ctx, base, y0 = -20, y1 = 20) {
-    const g = ctx.createLinearGradient(0, y0, 0, y1);
-    g.addColorStop(0, shade(base, 40));
-    g.addColorStop(0.35, shade(base, 14));
-    g.addColorStop(0.75, shade(base, -12));
-    g.addColorStop(1, shade(base, -32));
-    ctx.fillStyle = g;
-}
-
-function wheel(ctx, x, y, s = 1) {
-    ctx.save();
-    ctx.translate(x, y);
-    ctx.scale(s, s);
-
-    // tire
-    ctx.fillStyle = "rgba(0,0,0,0.78)";
-    roundRect(ctx, -4.2, -6.1, 8.4, 12.2, 3.2);
-    ctx.fill();
-
-    // rim ring
-    ctx.strokeStyle = "rgba(255,255,255,0.18)";
-    ctx.lineWidth = 1.2;
-    ctx.beginPath();
-    ctx.ellipse(0, 0, 2.7, 3.8, 0, 0, Math.PI * 2);
-    ctx.stroke();
-
-    // hub
-    ctx.fillStyle = "rgba(255,255,255,0.10)";
-    ctx.beginPath();
-    ctx.ellipse(0, 0, 1.1, 1.6, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.restore();
-}
-
-function speedGlow(ctx, base, amount) {
-    ctx.save();
-    ctx.globalAlpha = 0.20 * amount;
-    ctx.fillStyle = shade(base, 55);
-    ctx.beginPath();
-    ctx.ellipse(0, 0, 19, 29, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-}
-
-function headlights(ctx, x, y, w, h, a = 0.9) {
-    ctx.save();
-    ctx.globalAlpha = a;
-    ctx.fillStyle = "rgba(255,255,230,0.92)";
+/**
+ * DRAWING UTILITY: Glossy Highlight
+ */
+function applyGloss(ctx, x, y, w, h) {
+    const glint = ctx.createLinearGradient(x, y, x + w, y + h);
+    glint.addColorStop(0, "rgba(255,255,255,0.15)");
+    glint.addColorStop(0.5, "rgba(255,255,255,0)");
+    glint.addColorStop(1, "rgba(0,0,0,0.1)");
+    ctx.fillStyle = glint;
     ctx.fillRect(x, y, w, h);
-    ctx.restore();
 }
 
-function taillights(ctx, glow, isTraffic = false) {
-    ctx.save();
-    // traffic: slightly dimmer tail
-    const baseA = isTraffic ? 0.38 : 0.55;
-    const boostA = isTraffic ? 0.25 : 0.35;
-    ctx.globalAlpha = baseA + boostA * glow;
-    ctx.fillStyle = "rgba(255,80,80,0.85)";
-    ctx.fillRect(-9.4, 13.4, 4.6, 3.1);
-    ctx.fillRect(4.8, 13.4, 4.6, 3.1);
-    ctx.restore();
-}
+/**
+ * RE-DESIGNED: KART (The Standard "Chunky" Look)
+ */
+function drawKart(ctx, base) {
+    // 1. Body Base (The "Chassis")
+    ctx.fillStyle = shade(base, -20);
+    roundRect(ctx, -14, -18, 28, 40, 6);
+    ctx.fill();
 
-function hazardStripe(ctx) {
-    // subtle diagonal hazard stripe for obstacle cars
-    ctx.save();
-    ctx.globalAlpha = 0.18;
-    ctx.fillStyle = "rgba(0,0,0,0.55)";
+    // 2. Wheels (Better spacing)
+    const wheelW = 8;
+    const wheelH = 12;
+    ctx.fillStyle = "#1a1a1a";
+    [[-16, -12], [10, -12], [-16, 10], [10, 10]].forEach(([x, y]) => {
+        roundRect(ctx, x, y, wheelW, wheelH, 3);
+        ctx.fill();
+    });
+
+    // 3. Main Paint
+    const paint = ctx.createLinearGradient(-12, 0, 12, 0);
+    paint.addColorStop(0, shade(base, 10));
+    paint.addColorStop(0.5, base);
+    paint.addColorStop(1, shade(base, -15));
+    ctx.fillStyle = paint;
+    roundRect(ctx, -12, -18, 24, 38, 5);
+    ctx.fill();
+
+    // 4. Roof & Windshield (The 2.5D Pop)
+    ctx.fillStyle = "#1e293b"; // Glass
+    roundRect(ctx, -10, -5, 20, 14, 3);
+    ctx.fill();
+
+    // Windshield Glint
+    ctx.fillStyle = "rgba(255,255,255,0.2)";
     ctx.beginPath();
-    ctx.moveTo(-10, -6);
-    ctx.lineTo(10, -16);
-    ctx.lineTo(10, -10);
-    ctx.lineTo(-10, 0);
-    ctx.closePath();
+    ctx.moveTo(-8, -5); ctx.lineTo(-2, -5); ctx.lineTo(-6, 9); ctx.lineTo(-10, 9);
     ctx.fill();
 
-    ctx.globalAlpha = 0.12;
-    ctx.fillStyle = "rgba(255,255,255,0.60)";
+    // Roof
+    ctx.fillStyle = base;
+    roundRect(ctx, -10, 2, 20, 12, 2);
+    ctx.fill();
+}
+
+/**
+ * RE-DESIGNED: F1 (Aero & Slim)
+ */
+function drawF1(ctx, base) {
+    // Wheels (Giant rears, smaller fronts)
+    ctx.fillStyle = "#111";
+    roundRect(ctx, -20, 12, 10, 14, 2); // Rear L
+    roundRect(ctx, 10, 12, 10, 14, 2);  // Rear R
+    roundRect(ctx, -18, -18, 7, 10, 2); // Front L
+    roundRect(ctx, 11, -18, 7, 10, 2);  // Front R
+    ctx.fill();
+
+    // Rear Wing
+    ctx.fillStyle = "#222";
+    ctx.fillRect(-16, 22, 32, 5);
+
+    // Main Body (Tapered)
+    ctx.fillStyle = base;
     ctx.beginPath();
-    ctx.moveTo(-10, 2);
-    ctx.lineTo(10, -8);
-    ctx.lineTo(10, -4);
-    ctx.lineTo(-10, 6);
-    ctx.closePath();
+    ctx.moveTo(-4, -30); // Nose
+    ctx.lineTo(4, -30);
+    ctx.quadraticCurveTo(10, 0, 12, 24); // Body flare
+    ctx.lineTo(-12, 24);
+    ctx.quadraticCurveTo(-10, 0, -4, -30);
     ctx.fill();
-    ctx.restore();
+
+    // Cockpit (The "Halo" look)
+    ctx.fillStyle = "#111";
+    ctx.beginPath();
+    ctx.arc(0, 2, 5, 0, Math.PI * 2);
+    ctx.fill();
 }
 
-/* =========================
-   MODEL: KART
-   ========================= */
-function drawKart(ctx, base, isTraffic = false) {
-    wheel(ctx, -15, -11);
-    wheel(ctx, 15, -11);
-    wheel(ctx, -15, 11);
-    wheel(ctx, 15, 11);
-
-    // outline
-    ctx.fillStyle = "rgba(0,0,0,0.42)";
-    roundRect(ctx, -12.2, -18.2, 24.4, 36.4, 8);
+/**
+ * RE-DESIGNED: RALLY (Wide & Aggressive)
+ */
+function drawRally(ctx, base) {
+    // Wide Fenders
+    ctx.fillStyle = shade(base, -30);
+    roundRect(ctx, -16, -15, 32, 12, 4); // Front flare
+    roundRect(ctx, -16, 8, 32, 12, 4);  // Rear flare
     ctx.fill();
 
-    // body
-    glossyFill(ctx, base, -18, 18);
-    roundRect(ctx, -11.6, -17.6, 23.2, 35.2, 8);
+    // Body
+    ctx.fillStyle = base;
+    roundRect(ctx, -13, -20, 26, 42, 2);
     ctx.fill();
 
-    // carbon side
-    ctx.fillStyle = "rgba(0,0,0,0.16)";
-    roundRect(ctx, -11.6, -17.6, 7.4, 35.2, 7);
+    // Roof Rack / Vent detail
+    ctx.fillStyle = "rgba(0,0,0,0.3)";
+    ctx.fillRect(-4, -10, 8, 4);
+
+    // Windshield (Large and flat)
+    ctx.fillStyle = "#0f172a";
+    roundRect(ctx, -11, -8, 22, 18, 1);
     ctx.fill();
-
-    // center stripe
-    ctx.fillStyle = "rgba(255,255,255,0.12)";
-    ctx.fillRect(-1.7, -16.7, 3.4, 33.4);
-
-    // cockpit
-    const glass = ctx.createLinearGradient(0, -10, 0, 10);
-    glass.addColorStop(0, "rgba(210,235,255,0.26)");
-    glass.addColorStop(1, "rgba(120,170,220,0.14)");
-    ctx.fillStyle = glass;
-    roundRect(ctx, -8.1, -7.7, 16.2, 14.8, 7);
-    ctx.fill();
-
-    ctx.strokeStyle = "rgba(0,0,0,0.22)";
-    ctx.lineWidth = 1.4;
-    ctx.stroke();
-
-    // bumper
-    ctx.fillStyle = "rgba(0,0,0,0.28)";
-    roundRect(ctx, -10.6, -18.4, 21.2, 6.2, 3.4);
-    ctx.fill();
-
-    // grill slots
-    ctx.globalAlpha = 0.7;
-    ctx.fillStyle = "rgba(255,255,255,0.08)";
-    for (let i = -8; i <= 8; i += 4) ctx.fillRect(i, -16.9, 1.8, 3.2);
-    ctx.globalAlpha = 1;
-
-    // headlights (traffic: dim)
-    const ha = isTraffic ? 0.55 : 0.90;
-    headlights(ctx, -9.3, -16.6, 4.4, 3.2, ha);
-    headlights(ctx, 4.9, -16.6, 4.4, 3.2, ha);
-
-    // spoiler
-    ctx.fillStyle = "rgba(0,0,0,0.22)";
-    roundRect(ctx, -12, 13.2, 24, 4.6, 3);
-    ctx.fill();
-    ctx.fillStyle = "rgba(255,255,255,0.10)";
-    roundRect(ctx, -11.2, 13.6, 22.4, 3.2, 3);
-    ctx.fill();
-
-    if (isTraffic) hazardStripe(ctx);
-}
-
-/* =========================
-   MODEL: F1
-   ========================= */
-function drawF1(ctx, base, isTraffic = false) {
-    wheel(ctx, -18, -13, 1.18);
-    wheel(ctx, 18, -13, 1.18);
-    wheel(ctx, -17, 13, 1.12);
-    wheel(ctx, 17, 13, 1.12);
-
-    // rear wing
-    ctx.fillStyle = "rgba(0,0,0,0.26)";
-    roundRect(ctx, -17, 14.5, 34, 5.0, 3);
-    ctx.fill();
-    ctx.fillStyle = "rgba(255,255,255,0.08)";
-    roundRect(ctx, -16, 15.1, 32, 3.6, 3);
-    ctx.fill();
-
-    // main body outline (longer)
-    ctx.fillStyle = "rgba(0,0,0,0.46)";
-    roundRect(ctx, -10.7, -22.0, 21.4, 44.0, 11);
-    ctx.fill();
-
-    // main body
-    glossyFill(ctx, base, -24, 24);
-    roundRect(ctx, -10.1, -21.4, 20.2, 42.8, 11);
-    ctx.fill();
-
-    // sidepods
-    ctx.fillStyle = "rgba(0,0,0,0.15)";
-    roundRect(ctx, -14.4, -10.2, 28.8, 20.4, 9);
-    ctx.fill();
-
-    // nose cone
-    ctx.fillStyle = "rgba(0,0,0,0.18)";
-    roundRect(ctx, -6.6, -28.0, 13.2, 11.2, 7);
-    ctx.fill();
-    ctx.fillStyle = "rgba(255,255,255,0.10)";
-    roundRect(ctx, -5.6, -27.0, 11.2, 9.2, 6);
-    ctx.fill();
-
-    // front wing
-    ctx.fillStyle = "rgba(0,0,0,0.25)";
-    roundRect(ctx, -18, -30.0, 36, 5.0, 3);
-    ctx.fill();
-    ctx.fillStyle = "rgba(255,255,255,0.08)";
-    roundRect(ctx, -17, -29.4, 34, 3.6, 3);
-    ctx.fill();
-
-    // cockpit
-    const glass = ctx.createLinearGradient(0, -10, 0, 10);
-    glass.addColorStop(0, "rgba(210,235,255,0.22)");
-    glass.addColorStop(1, "rgba(120,170,220,0.12)");
-    ctx.fillStyle = glass;
-    roundRect(ctx, -7.0, -8.7, 14.0, 17.4, 8);
-    ctx.fill();
-    ctx.strokeStyle = "rgba(0,0,0,0.20)";
-    ctx.lineWidth = 1.3;
-    ctx.stroke();
-
-    // stripe
-    ctx.fillStyle = "rgba(255,255,255,0.10)";
-    ctx.fillRect(-1.2, -21.0, 2.4, 42.0);
-
-    const ha = isTraffic ? 0.45 : 0.75;
-    headlights(ctx, -6.4, -24.0, 3.0, 2.4, ha);
-    headlights(ctx, 3.4, -24.0, 3.0, 2.4, ha);
-
-    if (isTraffic) hazardStripe(ctx);
-}
-
-/* =========================
-   MODEL: RALLY
-   ========================= */
-function drawRally(ctx, base, isTraffic = false) {
-    wheel(ctx, -14.5, -11.5);
-    wheel(ctx, 14.5, -11.5);
-    wheel(ctx, -14.0, 11.5);
-    wheel(ctx, 14.0, 11.5);
-
-    // body outline
-    ctx.fillStyle = "rgba(0,0,0,0.42)";
-    roundRect(ctx, -13.0, -18.0, 26.0, 36.0, 10);
-    ctx.fill();
-
-    // body
-    glossyFill(ctx, base, -20, 20);
-    roundRect(ctx, -12.4, -17.4, 24.8, 34.8, 10);
-    ctx.fill();
-
-    // fenders
-    ctx.fillStyle = "rgba(0,0,0,0.14)";
-    roundRect(ctx, -12.4, -17.4, 24.8, 8.4, 8);
-    ctx.fill();
-    roundRect(ctx, -12.4, 9.0, 24.8, 8.4, 8);
-    ctx.fill();
-
-    // roof scoop
-    ctx.fillStyle = "rgba(0,0,0,0.20)";
-    roundRect(ctx, -4.8, -15.8, 9.6, 5.6, 3.2);
-    ctx.fill();
-    ctx.fillStyle = "rgba(255,255,255,0.08)";
-    roundRect(ctx, -4.1, -15.2, 8.2, 4.2, 3);
-    ctx.fill();
-
-    // glass
-    const glass = ctx.createLinearGradient(0, -12, 0, 12);
-    glass.addColorStop(0, "rgba(210,235,255,0.22)");
-    glass.addColorStop(1, "rgba(120,170,220,0.12)");
-    ctx.fillStyle = glass;
-    roundRect(ctx, -8.8, -8.8, 17.6, 17.6, 8.5);
-    ctx.fill();
-
-    ctx.strokeStyle = "rgba(0,0,0,0.20)";
-    ctx.lineWidth = 1.3;
-    ctx.stroke();
-
-    // bumper
-    ctx.fillStyle = "rgba(0,0,0,0.25)";
-    roundRect(ctx, -11.4, -18.9, 22.8, 6.8, 3.6);
-    ctx.fill();
-
-    const ha = isTraffic ? 0.55 : 0.90;
-    headlights(ctx, -10.0, -16.4, 5.4, 3.7, ha);
-    headlights(ctx, 4.6, -16.4, 5.4, 3.7, ha);
-
-    // rally stripe offset
-    ctx.fillStyle = "rgba(255,255,255,0.10)";
-    ctx.fillRect(-4.2, -16.8, 2.8, 33.6);
-
-    if (isTraffic) hazardStripe(ctx);
-}
-
-function drawBadge(ctx, text) {
-    ctx.save();
-    ctx.globalAlpha = 0.95;
-    ctx.fillStyle = "rgba(0,0,0,0.40)";
-    roundRect(ctx, -16, -33, 32, 11, 6);
-    ctx.fill();
-    ctx.fillStyle = "rgba(255,255,255,0.92)";
-    ctx.font = "700 7.5px system-ui, sans-serif";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(text, 0, -27.3);
-    ctx.restore();
 }
 
 export function drawCar(ctx, car, cameraY) {
-    const sx = car.x;
     const sy = car.y - cameraY;
-
-    // cull super-offscreen cars (cheap)
-    if (sy < -240 || sy > ctx.canvas.height + 240) return;
+    if (sy < -100 || sy > ctx.canvas.height + 100) return;
 
     ctx.save();
-    ctx.translate(sx, sy);
-
-    // keep your orientation stable
+    ctx.translate(car.x, sy);
     ctx.rotate(car.angle - Math.PI / 2 + Math.PI);
 
-    // shadow
-    ctx.globalAlpha = 0.22;
-    ctx.fillStyle = "#000";
-    ctx.beginPath();
-    ctx.ellipse(0, 7, 16, 22, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.globalAlpha = 1;
-
-    // Traffic slightly smaller to read as obstacle
-    const isTraffic = !!car.isTraffic;
-    const scale = (car.renderScale ?? (isTraffic ? 1.12 : 1.08));
-    ctx.scale(scale, scale);
+    // 1. Ground Shadow (Blurred and offset)
+    ctx.shadowColor = "rgba(0,0,0,0.5)";
+    ctx.shadowBlur = 8;
+    ctx.shadowOffsetY = 6;
+    ctx.shadowOffsetX = 3;
 
     const base = carColor(car.color);
 
-    // speed glow (traffic: weaker)
-    const g = clamp(car.speed / (car.maxSpeed || 1), 0, 1);
-    const glow = isTraffic ? g * 0.55 : g;
-    if (glow > 0.15) speedGlow(ctx, base, glow);
+    // 2. Draw Model
+    if (car.model === "f1") drawF1(ctx, base);
+    else if (car.model === "rally") drawRally(ctx, base);
+    else drawKart(ctx, base);
 
-    if (car.model === "f1") drawF1(ctx, base, isTraffic);
-    else if (car.model === "rally") drawRally(ctx, base, isTraffic);
-    else drawKart(ctx, base, isTraffic);
+    // 3. Lights (Functional Shaders)
+    const isBraking = car.speed < (car.maxSpeed * 0.4);
 
-    // taillights more visible at low speed
-    const brakeGlow = clamp(1 - (car.speed / (car.maxSpeed || 1)), 0, 1);
-    taillights(ctx, brakeGlow, isTraffic);
+    // Reset shadow for lights
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
 
-    // spec edge
-    ctx.globalAlpha = 0.20;
-    ctx.strokeStyle = "rgba(255,255,255,0.22)";
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.ellipse(0, 0, 12.5, 18.8, 0, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.globalAlpha = 1;
+    // Headlights (Front)
+    ctx.fillStyle = "#fffde7";
+    ctx.shadowBlur = 10;
+    ctx.shadowColor = "white";
+    ctx.fillRect(-10, -19, 4, 2);
+    ctx.fillRect(6, -19, 4, 2);
 
-    // badge
-    if (car.isPlayer) drawBadge(ctx, "YOU");
-    // Optional: show tiny TRAFFIC label for debugging
-    // else if (isTraffic) drawBadge(ctx, "TRAFFIC");
+    // Taillights (Rear)
+    ctx.fillStyle = isBraking ? "#ff1111" : "#800000";
+    ctx.shadowColor = "red";
+    ctx.shadowBlur = isBraking ? 15 : 5;
+    ctx.fillRect(-9, 21, 5, 3);
+    ctx.fillRect(4, 21, 5, 3);
 
     ctx.restore();
 }

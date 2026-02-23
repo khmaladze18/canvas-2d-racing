@@ -6,6 +6,13 @@
     <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
     <meta name="theme-color" content="#0b0f17" />
     <title>Car Racing</title>
+
+    <link rel="icon" type="image/png" href="./img/logo.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:ital,wght@0,400;0,700;0,900;1,700;1,900&display=swap"
+        rel="stylesheet">
+
     <link rel="stylesheet" href="./styles.css" />
 </head>
 
@@ -16,14 +23,12 @@
         </div>
     </noscript>
 
-    <!-- LANDING (full page bg + bottom center START button) -->
     <div id="landing" class="landing" role="dialog" aria-modal="true" aria-label="Start screen">
         <button id="landingStartBtn" class="btn primary landing-start" type="button">
-            START
+            START ENGINE
         </button>
     </div>
 
-    <!-- PLAYABLE APP (hidden until START clicked) -->
     <div id="app" class="app hidden">
         <header class="topbar">
             <div class="brand" aria-label="Car Racing">
@@ -41,24 +46,22 @@
                 Your browser does not support the canvas element.
             </canvas>
 
-            <!-- Overlay UI (acts like a modal) -->
             <div id="overlay" class="overlay" role="dialog" aria-modal="true" aria-label="Game menu">
-                <!-- Login -->
-                <section id="screen-login" class="screen active" aria-labelledby="loginTitle">
-                    <h1 id="loginTitle">Welcome</h1>
-                    <p class="muted">Enter your name to start racing.</p>
 
-                    <input id="nameInput" class="input" placeholder="Your name" maxlength="40" autocomplete="name"
+                <section id="screen-login" class="screen active" aria-labelledby="loginTitle">
+                    <h1 id="loginTitle">Welcome Racer</h1>
+                    <p class="muted">Enter your name to hit the track.</p>
+
+                    <input id="nameInput" class="input" placeholder="Driver Name" maxlength="40" autocomplete="name"
                         autofocus spellcheck="false" enterkeyhint="done" />
 
                     <button id="loginBtn" class="btn primary" type="button">Continue</button>
                     <p class="micro">Tip: Finish <strong>1st</strong> to unlock the next level.</p>
                 </section>
 
-                <!-- Car select -->
                 <section id="screen-car" class="screen" aria-labelledby="carTitle">
-                    <h1 id="carTitle">Choose your car</h1>
-                    <p class="muted">Pick a color. Then race to <strong>1st place</strong>.</p>
+                    <h1 id="carTitle">Garage</h1>
+                    <p class="muted">Select your machine. First place takes all.</p>
 
                     <div class="car-row" role="listbox" aria-label="Car colors">
                         <button class="car-btn" data-color="blue" type="button" role="option" aria-selected="false">
@@ -80,16 +83,15 @@
                         </button>
                     </div>
 
-                    <button id="startBtn" class="btn primary" type="button" disabled>Start Race</button>
+                    <button id="startBtn" class="btn primary w-full" type="button" disabled>Start Race</button>
 
                     <p class="micro muted">
-                        Note: car shapes are randomized (kart / f1 / rally).
+                        Note: Chassis shapes are randomized (Kart / F1 / Rally).
                     </p>
                 </section>
 
-                <!-- Result -->
                 <section id="screen-result" class="screen" aria-labelledby="resultTitle">
-                    <h1 id="resultTitle">Result</h1>
+                    <h1 id="resultTitle">Finish Line</h1>
                     <p id="resultText" class="muted"></p>
                     <div class="row">
                         <button id="nextLevelBtn" class="btn primary" type="button">Next Level</button>
@@ -97,34 +99,43 @@
                     </div>
                 </section>
 
-                <!-- Game Over -->
                 <section id="screen-over" class="screen" aria-labelledby="overTitle">
-                    <h1 id="overTitle">Game Over</h1>
+                    <h1 id="overTitle">Eliminated</h1>
                     <p id="overText" class="muted"></p>
-                    <button id="restartBtnOver" class="btn primary" type="button">Restart</button>
+                    <button id="restartBtnOver" class="btn primary w-full" type="button">Try Again</button>
                 </section>
             </div>
 
-            <!-- HUD (in-race) -->
             <div id="hud" class="hud hidden" aria-live="polite">
                 <div class="hud-left">
                     <div class="hud-name">
                         <strong id="hudName">Player</strong>
-                        <span class="pill">LEVEL <span id="hudLevel">1</span></span>
+                        <span class="pill">LVL <span id="hudLevel">1</span></span>
                     </div>
-                    <div class="hud-mini muted">Win the race to continue</div>
+                    <div class="hud-mini muted">Push for 1st Place</div>
                 </div>
 
+                <div class="hud-divider"></div>
+
                 <div class="hud-right">
-                    <div>Position: <span id="hudPos">-</span>/<span id="hudTotal">5</span></div>
-                    <div>Speed: <span id="hudSpeed">0</span></div>
-                    <div>Progress: <span id="hudProg">0%</span></div>
+                    <div class="hud-stat">
+                        <span class="hud-label">POS</span>
+                        <span class="hud-value"><span id="hudPos">-</span><span class="hud-total">/<span
+                                    id="hudTotal">5</span></span></span>
+                    </div>
+                    <div class="hud-stat">
+                        <span class="hud-label">KM/H</span>
+                        <span class="hud-value speed-value" id="hudSpeed">0</span>
+                    </div>
+                    <div class="hud-stat">
+                        <span class="hud-label">PRG</span>
+                        <span class="hud-value" id="hudProg">0%</span>
+                    </div>
                 </div>
             </div>
         </main>
     </div>
 
-    <!-- Start screen logic (simple + reliable) -->
     <script>
         (function () {
             const landing = document.getElementById("landing");
@@ -135,13 +146,11 @@
             function start() {
                 landing.classList.add("hidden");
                 app.classList.remove("hidden");
-                // focus name input for smooth UX
                 setTimeout(() => nameInput?.focus?.(), 50);
             }
 
             btn?.addEventListener("click", start);
 
-            // allow Enter to start
             window.addEventListener("keydown", (e) => {
                 if (!landing || landing.classList.contains("hidden")) return;
                 if (e.key === "Enter" || e.key === " ") {

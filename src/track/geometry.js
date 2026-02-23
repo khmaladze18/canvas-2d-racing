@@ -1,28 +1,25 @@
 import { clamp } from "./utils.js";
 
-// Small helper: safe length check once
-function isEmpty(points) {
-    return !points || points.length === 0;
-}
-
+/**
+ * Returns the point at index i, clamped to track bounds.
+ */
 export function pointAtIndex(points, i) {
-    if (isEmpty(points)) return null;
-    const last = points.length - 1;
-    const idx = clamp(i | 0, 0, last); // fast int
-    return points[idx];
+    if (!points?.length) return null;
+    return points[clamp(i | 0, 0, points.length - 1)];
 }
 
+/**
+ * Finds the index of the closest point to (px, py).
+ * Optimized with distance squared and search windowing.
+ */
 export function closestIndex(points, px, py, hint = 0) {
-    if (isEmpty(points)) return -1;
+    const n = points?.length;
+    if (!n) return -1;
 
-    const n = points.length;
     const last = n - 1;
-
     let bestI = clamp(hint | 0, 0, last);
 
-    // If the track is short, scanning all points is cheap + more reliable.
-    // Otherwise scan a window around the hint (local search).
-    const window = n < 240 ? last : 80; // tuneable
+    const window = n < 200 ? last : 100;
     const start = Math.max(0, bestI - window);
     const end = Math.min(last, bestI + window);
 
@@ -38,52 +35,68 @@ export function closestIndex(points, px, py, hint = 0) {
             bestI = i;
         }
     }
-
     return bestI;
 }
 
+/**
+ * Calculates smooth tangent using central difference.
+ */
 export function tangentAtIndex(points, i) {
-    if (isEmpty(points)) return { x: 1, y: 0 };
+    const n = points?.length;
+    if (!n) return { x: 0, y: -1 };
 
-    const n = points.length;
     const last = n - 1;
     const idx = clamp(i | 0, 0, last);
 
-    // Central difference where possible; forward/backward at ends
-    const i0 = idx > 0 ? idx - 1 : idx;
-    const i1 = idx < last ? idx + 1 : idx;
+    const p0 = points[Math.max(0, idx - 1)];
+    const p1 = points[Math.min(last, idx + 1)];
 
-    const a = points[i0];
-    const b = points[i1];
+    const dx = p1.x - p0.x;
+    const dy = p1.y - p0.y;
+    const mag = Math.sqrt(dx * dx + dy * dy);
 
-    let dx = b.x - a.x;
-    let dy = b.y - a.y;
-
-    const len = Math.hypot(dx, dy);
-    if (len > 1e-8) {
-        dx /= len;
-        dy /= len;
-    } else {
-        // Degenerate: choose a stable default
-        dx = 1;
-        dy = 0;
-    }
-
-    return { x: dx, y: dy };
+    return mag > 1e-6 ? { x: dx / mag, y: dy / mag } : { x: 0, y: -1 };
 }
 
+/**
+ * Returns the normal vector (perpendicular to track).
+ */
 export function normalAtIndex(points, i) {
     const t = tangentAtIndex(points, i);
     return { x: -t.y, y: t.x };
 }
 
+/**
+ * Core distance logic: Returns signed distance and side.
+ * Negative = Left, Positive = Right.
+ */
+export function getTrackSignedDistance(points, px, py, hintIdx = 0) {
+    const i = closestIndex(points, px, py, hintIdx);
+    if (i < 0) return { idx: -1, distance: 0, side: 0 };
+
+    const p = points[i];
+    const n = normalAtIndex(points, i);
+
+    const dx = px - p.x;
+    const dy = py - p.y;
+
+    // Dot product projects the vector onto the normal
+    const signedDist = dx * n.x + dy * n.y;
+
+    return {
+        idx: i,
+        distance: Math.abs(signedDist),
+        side: Math.sign(signedDist) || 1 // Default to Right if exactly on center
+    };
+}
+
+/**
+ * Legacy/Simple API: Returns absolute distance to center.
+ */
 export function distanceToCenter(points, px, py, hintIdx = 0) {
-    const idx = closestIndex(points, px, py, hintIdx);
-    if (idx < 0) return { idx: -1, dist: Infinity };
-
-    const p = points[idx];
-    const dx = p.x - px;
-    const dy = p.y - py;
-
-    return { idx, dist: Math.hypot(dx, dy) };
+    const res = getTrackSignedDistance(points, px, py, hintIdx);
+    return {
+        idx: res.idx,
+        dist: res.distance
+    };
 }

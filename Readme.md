@@ -1,15 +1,17 @@
+<img width="1912" height="937" alt="image" src="https://github.com/user-attachments/assets/21cb2554-2aa6-4eae-869f-cf505ef4bf5f" />
+
 # 🏎️ Car Racing — Modern Canvas Game
 
 A modular 2D racing game built with **Vanilla JavaScript (ES Modules)** and **HTML5 Canvas**.
 
-This project demonstrates advanced frontend architecture, procedural track generation, AI behavior, and custom rendering without external libraries.
+This project demonstrates advanced frontend architecture, procedural track generation, AI behavior, and custom rendering without external libraries. This project was built with ChatGPT 5.2.
 
 ---
 
 ## 🚀 Live Demo
 
 👉 Deployed on Netlify  
-([Add your live URL here](https://2d-car-game1.netlify.app/))
+([live URL here](https://2d-car-game1.netlify.app/))
 
 ---
 
@@ -71,8 +73,6 @@ Using VS Code:
 1. Install **Live Server**
 2. Open `index.html`
 3. Start Live Server
-
-Or via terminal:
 
 ---
 

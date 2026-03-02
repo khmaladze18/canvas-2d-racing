@@ -6,6 +6,8 @@ A modular 2D racing game built with **Vanilla JavaScript (ES Modules)** and **HT
 
 This project demonstrates advanced frontend architecture, procedural track generation, AI behavior, and custom rendering without external libraries. This project was built with ChatGPT 5.2.
 
+Initially built with (ChatGPT 5.2), and later only the UI was updated using (Google Gemini).
+
 ---
 
 ## 🚀 Live Demo

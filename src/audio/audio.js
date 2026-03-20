@@ -1,4 +1,8 @@
 const MASTER_ON = 0.72;
+const ENGINE_IDLE_LOW_FREQ = 42;
+const ENGINE_IDLE_HIGH_FREQ = 78;
+const ENGINE_RESPONSE = 0.12;
+const ENGINE_GAIN_RESPONSE = 0.18;
 
 function clamp(v, a, b) {
     return v < a ? a : v > b ? b : v;
@@ -32,7 +36,6 @@ class RacingAudio {
         this.music = null;
         this.muted = false;
         this.countdownDuckUntil = 0;
-        this.prevPlayerBoost = false;
         this.prevPickupFlash = 0;
         this.unlockHandler = () => this.unlock();
         window.addEventListener("pointerdown", this.unlockHandler, { passive: true });
@@ -59,6 +62,7 @@ class RacingAudio {
     createEngineBus() {
         const ctx = this.ctx;
         const engineGain = ctx.createGain();
+        const engineTone = ctx.createBiquadFilter();
         const low = ctx.createOscillator();
         const high = ctx.createOscillator();
         const lowGain = ctx.createGain();
@@ -70,10 +74,14 @@ class RacingAudio {
         const driftNoise = makeNoiseLoop(ctx, this.noiseBuffer);
         const driftNoiseHi = makeNoiseLoop(ctx, this.noiseBuffer);
 
-        low.type = "sawtooth";
-        high.type = "triangle";
-        low.frequency.value = 58;
-        high.frequency.value = 110;
+        engineTone.type = "lowpass";
+        engineTone.frequency.value = 220;
+        engineTone.Q.value = 0.8;
+        engineGain.gain.value = 0.58;
+        low.type = "triangle";
+        high.type = "sine";
+        low.frequency.value = ENGINE_IDLE_LOW_FREQ;
+        high.frequency.value = ENGINE_IDLE_HIGH_FREQ;
         lowGain.gain.value = 0;
         highGain.gain.value = 0;
         driftFilter.type = "bandpass";
@@ -84,8 +92,9 @@ class RacingAudio {
         driftGain.gain.value = 0;
         driftGainHi.gain.value = 0;
 
-        low.connect(lowGain).connect(engineGain);
-        high.connect(highGain).connect(engineGain);
+        low.connect(lowGain).connect(engineTone);
+        high.connect(highGain).connect(engineTone);
+        engineTone.connect(engineGain);
         driftNoise.connect(driftFilter).connect(driftGain).connect(engineGain);
         driftNoiseHi.connect(driftResonance).connect(driftGainHi).connect(engineGain);
         engineGain.connect(this.master);
@@ -102,6 +111,7 @@ class RacingAudio {
             highGain,
             driftGain,
             driftGainHi,
+            engineTone,
             driftFilter,
             driftResonance,
         };
@@ -203,17 +213,19 @@ class RacingAudio {
         const latVy = player.vy - player.fy * forward;
         const lateralSpeed = Math.hypot(latVx, latVy);
         const slip01 = clamp(lateralSpeed / 120, 0, 1.4);
-        const lowFreq = 55 + speed01 * 85 + throttle * 8;
-        const highFreq = 110 + speed01 * 180 + throttle * 15;
-        const lowGain = 0.03 + speed01 * 0.1 + throttle * 0.05;
-        const highGain = 0.015 + speed01 * 0.055;
-        const driftGain = player.isDrifting ? Math.min(0.22, 0.03 + slip01 * 0.14) : 0;
-        const driftGainHi = player.isDrifting ? Math.min(0.14, 0.01 + slip01 * 0.1) : 0;
+        const lowFreq = ENGINE_IDLE_LOW_FREQ + speed01 * 40 + throttle * 3;
+        const highFreq = ENGINE_IDLE_HIGH_FREQ + speed01 * 92 + throttle * 6;
+        const lowGain = 0.012 + speed01 * 0.035 + throttle * 0.012;
+        const highGain = 0.003 + speed01 * 0.016;
+        const toneCutoff = 140 + speed01 * 90 + throttle * 24;
+        const driftGain = player.isDrifting ? Math.min(0.12, 0.012 + slip01 * 0.07) : 0;
+        const driftGainHi = player.isDrifting ? Math.min(0.06, 0.004 + slip01 * 0.045) : 0;
 
-        engine.low.frequency.setTargetAtTime(lowFreq, ctx.currentTime, 0.04);
-        engine.high.frequency.setTargetAtTime(highFreq, ctx.currentTime, 0.04);
-        engine.lowGain.gain.setTargetAtTime(lowGain, ctx.currentTime, 0.05);
-        engine.highGain.gain.setTargetAtTime(highGain, ctx.currentTime, 0.05);
+        engine.low.frequency.setTargetAtTime(lowFreq, ctx.currentTime, ENGINE_RESPONSE);
+        engine.high.frequency.setTargetAtTime(highFreq, ctx.currentTime, ENGINE_RESPONSE);
+        engine.lowGain.gain.setTargetAtTime(lowGain, ctx.currentTime, ENGINE_GAIN_RESPONSE);
+        engine.highGain.gain.setTargetAtTime(highGain, ctx.currentTime, ENGINE_GAIN_RESPONSE);
+        engine.engineTone.frequency.setTargetAtTime(toneCutoff, ctx.currentTime, 0.16);
         engine.driftGain.gain.setTargetAtTime(driftGain, ctx.currentTime, 0.02);
         engine.driftGainHi.gain.setTargetAtTime(driftGainHi, ctx.currentTime, 0.02);
         if (player.isDrifting) {
@@ -229,9 +241,7 @@ class RacingAudio {
             engine.driftResonance.frequency.setTargetAtTime(2100, ctx.currentTime, 0.06);
         }
 
-        if (player.manualBoostActive && !this.prevPlayerBoost) this.playBoost();
         if ((player.boostPickupFlash || 0) > this.prevPickupFlash + 0.08) this.playPickup(1);
-        this.prevPlayerBoost = !!player.manualBoostActive;
         this.prevPickupFlash = player.boostPickupFlash || 0;
     }
 
@@ -246,11 +256,6 @@ class RacingAudio {
     playPickup(intensity = 1) {
         this.tone({ type: "triangle", freq: 720, endFreq: 1040, gain: 0.05 * intensity, dur: 0.12 });
         this.tone({ type: "sine", freq: 980, endFreq: 1380, gain: 0.028 * intensity, dur: 0.14, delay: 0.03 });
-    }
-
-    playBoost() {
-        this.tone({ type: "sawtooth", freq: 180, endFreq: 420, gain: 0.06, dur: 0.22 });
-        this.noiseBurst({ gain: 0.03, dur: 0.18, freq: 1200 });
     }
 
     playCollision(impulse = 120) {

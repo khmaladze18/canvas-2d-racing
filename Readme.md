@@ -6,6 +6,8 @@ A browser-based top-down arcade racing game built with **Vanilla JavaScript (ES 
 
 > Built with ChatGPT and Claude. UI designed with Gemini.
 
+Initially built with (ChatGPT 5.2), and later only the UI was updated using (Google Gemini).
+
 ---
 
 ## 🚀 Live Demo

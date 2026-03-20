@@ -39,6 +39,7 @@
             <div class="hint" aria-label="Controls">
                 Controls: <kbd>WASD</kbd> / <kbd>Arrows</kbd> • <kbd>R</kbd> Restart
             </div>
+            <button id="audioToggleBtn" class="audio-toggle" type="button" aria-pressed="false">Sound On</button>
         </header>
 
         <main class="stage">
@@ -46,9 +47,13 @@
                 Your browser does not support the canvas element.
             </canvas>
 
+            <div class="stage-glow stage-glow-left" aria-hidden="true"></div>
+            <div class="stage-glow stage-glow-right" aria-hidden="true"></div>
+
             <div id="overlay" class="overlay" role="dialog" aria-modal="true" aria-label="Game menu">
 
                 <section id="screen-login" class="screen active" aria-labelledby="loginTitle">
+                    <div class="screen-kicker">Race Control</div>
                     <h1 id="loginTitle">Welcome Racer</h1>
                     <p class="muted">Enter your name to hit the track.</p>
 
@@ -56,10 +61,15 @@
                         autofocus spellcheck="false" enterkeyhint="done" />
 
                     <button id="loginBtn" class="btn primary" type="button">Continue</button>
-                    <p class="micro">Tip: Finish <strong>1st</strong> to unlock the next level.</p>
+                    <div class="screen-info">
+                        <div class="info-chip">1 Lap Shootout</div>
+                        <div class="info-chip">Finish 1st To Advance</div>
+                    </div>
+                    <p class="micro">Tip: Build speed on straights and hold the racing line through the corners.</p>
                 </section>
 
                 <section id="screen-car" class="screen" aria-labelledby="carTitle">
+                    <div class="screen-kicker">Garage Bay</div>
                     <h1 id="carTitle">Garage</h1>
                     <p class="muted">Select your machine. First place takes all.</p>
 
@@ -85,12 +95,16 @@
 
                     <button id="startBtn" class="btn primary w-full" type="button" disabled>Start Race</button>
 
-                    <p class="micro muted">
-                        Note: Chassis shapes are randomized (Kart / F1 / Rally).
-                    </p>
+                    <div class="screen-info">
+                        <div class="info-chip">5 Car Grid</div>
+                        <div class="info-chip">F1 Spec</div>
+                        <div class="info-chip">Closed Circuit</div>
+                    </div>
+                    <p class="micro muted">Note: Races use only F1 cars for you and your opponents.</p>
                 </section>
 
                 <section id="screen-result" class="screen" aria-labelledby="resultTitle">
+                    <div class="screen-kicker">Race Result</div>
                     <h1 id="resultTitle">Finish Line</h1>
                     <p id="resultText" class="muted"></p>
                     <div class="row">
@@ -100,38 +114,91 @@
                 </section>
 
                 <section id="screen-over" class="screen" aria-labelledby="overTitle">
+                    <div class="screen-kicker">Session Ended</div>
                     <h1 id="overTitle">Eliminated</h1>
                     <p id="overText" class="muted"></p>
                     <button id="restartBtnOver" class="btn primary w-full" type="button">Try Again</button>
                 </section>
             </div>
 
-            <div id="hud" class="hud hidden" aria-live="polite">
-                <div class="hud-left">
-                    <div class="hud-name">
-                        <strong id="hudName">Player</strong>
-                        <span class="pill">LVL <span id="hudLevel">1</span></span>
+            <aside class="race-side-ui" aria-label="Race side panel">
+                <div id="hud" class="hud hidden" aria-live="polite">
+                    <div class="hud-block hud-block-primary">
+                        <div class="hud-block-title">Driver</div>
+                        <div class="hud-name">
+                            <strong id="hudName">Player</strong>
+                            <span class="pill">L<span id="hudLevel">1</span></span>
+                        </div>
+                        <div class="hud-mini" id="hudStatus">Push for 1st Place</div>
                     </div>
-                    <div class="hud-mini muted">Push for 1st Place</div>
+
+                    <div class="hud-divider"></div>
+
+                    <div class="hud-right">
+                        <div class="hud-stat hud-stat-accent">
+                            <span class="hud-label">POS</span>
+                            <span class="hud-value"><span id="hudPos">-</span><span class="hud-total">/<span
+                                        id="hudTotal">5</span></span></span>
+                        </div>
+                        <div class="hud-stat">
+                            <span class="hud-label">KM/H</span>
+                            <span class="hud-value speed-value" id="hudSpeed">0</span>
+                        </div>
+                        <div class="hud-stat">
+                            <span class="hud-label">PRG</span>
+                            <span class="hud-value" id="hudProg">0%</span>
+                        </div>
+                    </div>
+
+                    <div class="hud-progress">
+                        <div class="hud-progress-track">
+                            <div id="hudProgFill" class="hud-progress-fill"></div>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="hud-divider"></div>
+                <aside id="hudMapShell" class="minimap-panel hidden" aria-label="Race map">
+                    <div class="minimap-head">
+                        <div class="minimap-head-copy">
+                            <span class="minimap-title">Track Map</span>
+                            <span class="minimap-subtitle">Live Position Feed</span>
+                        </div>
+                        <span class="minimap-legend">
+                            <span class="legend-dot player-dot"></span>
+                            You
+                            <span class="legend-dot rival-dot"></span>
+                            Rivals
+                        </span>
+                    </div>
+                    <canvas id="hudMap" class="minimap-canvas" width="220" height="160" aria-label="Race minimap"></canvas>
+                </aside>
 
-                <div class="hud-right">
-                    <div class="hud-stat">
-                        <span class="hud-label">POS</span>
-                        <span class="hud-value"><span id="hudPos">-</span><span class="hud-total">/<span
-                                    id="hudTotal">5</span></span></span>
+                <aside id="hudBoostShell" class="boost-panel hidden" aria-label="Boost status">
+                    <div class="boost-head">
+                        <span class="boost-title">B Boost</span>
+                        <span id="hudBoostTime" class="boost-time">0.0s</span>
                     </div>
-                    <div class="hud-stat">
-                        <span class="hud-label">KM/H</span>
-                        <span class="hud-value speed-value" id="hudSpeed">0</span>
+                    <div class="boost-track">
+                        <div id="hudBoostFill" class="boost-fill"></div>
                     </div>
-                    <div class="hud-stat">
-                        <span class="hud-label">PRG</span>
-                        <span class="hud-value" id="hudProg">0%</span>
+                </aside>
+
+                <aside id="hudInventoryShell" class="boost-inventory-panel hidden" aria-label="Boost inventory">
+                    <div class="boost-head">
+                        <span class="boost-title">Stored Boosts</span>
+                        <span id="hudBoostInventory" class="boost-time">0</span>
                     </div>
+                    <div class="boost-inventory-copy">Collect road boosts, then press <kbd>B</kbd> to spend one.</div>
+                </aside>
+            </aside>
+
+            <div id="countdown-overlay" class="countdown-overlay hidden" aria-live="assertive">
+                <div class="countdown-lights">
+                    <div class="countdown-light" id="light-1"></div>
+                    <div class="countdown-light" id="light-2"></div>
+                    <div class="countdown-light" id="light-3"></div>
                 </div>
+                <div id="countdown-text" class="countdown-text">READY?</div>
             </div>
         </main>
     </div>

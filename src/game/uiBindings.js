@@ -60,6 +60,15 @@ export function bindUI(game) {
         game.startLevel?.(game.level + 1);
     });
 
+    if (ui.audioToggleBtn) {
+        ui.audioToggleBtn.textContent = game.audio?.getLabel?.() || "Sound On";
+        ui.audioToggleBtn.addEventListener("click", () => {
+            const muted = game.audio?.toggleMute?.() ?? false;
+            ui.audioToggleBtn.textContent = game.audio?.getLabel?.() || (muted ? "Sound Off" : "Sound On");
+            ui.audioToggleBtn.setAttribute("aria-pressed", muted ? "true" : "false");
+        });
+    }
+
     // --- Restart Logic (Centralized) ---
     const handleRestart = () => {
         if (game.isRestarting) return;

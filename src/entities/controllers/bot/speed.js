@@ -1,6 +1,7 @@
 // src/entities/controllers/bot/speed.js
 import { clamp, lerp } from "../../../utils/math.js";
 import { accelerateForward } from "../../systems/carPhysics.js";
+import { getBotDifficulty } from "./difficulty.js";
 
 /**
  * Senior Refinement:
@@ -17,6 +18,8 @@ export function computeDesiredSpeed({
     lookAhead, // Delta further down the track
     maxTurn,
 }) {
+    const diff = car.botDifficulty || getBotDifficulty(level);
+
     // 1. Organic Noise
     ai.t += dt;
     const n = (Math.sin(ai.t * 0.5) * 0.7 + Math.sin(ai.t * 2.1) * 0.3);
@@ -29,19 +32,14 @@ export function computeDesiredSpeed({
 
     const turn01 = clamp(combinedTurn / (maxTurn || 0.5), 0, 1);
 
-    // INCREASED: Bots slow down more for curves (was 0.25)
-    const curveSlowFactor = 0.35 - (level * 0.005);
+    const curveSlowFactor = clamp(diff.curveDiscipline, 0.24, 0.36);
     const curveSlow = 1 - curveSlowFactor * turn01;
 
-    // 3. Final Calculation
-    // LOWERED: Personality base changed from 0.85 to 0.78
-    // This gives the player more room to overtake on straights.
-    const personality = 0.78 + (ai.speedNoise * 0.1);
+    const personality = diff.targetPace + ai.speedNoise * 0.055;
+    const levelCap = 0.94 + diff.curve * 0.12;
+    const boostPace = car.manualBoostActive ? 1.22 : 1;
 
-    // Optional: Add a level-based cap to prevent bots from scaling too fast
-    const levelCap = 0.9 + (level * 0.002);
-
-    return car.maxSpeed * speedMul * curveSlow * personality * levelCap;
+    return car.maxSpeed * speedMul * curveSlow * personality * levelCap * boostPace;
 }
 
 export function applySpeedControl(car, dt, desired) {

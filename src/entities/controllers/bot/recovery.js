@@ -1,5 +1,6 @@
 import { lerp, clamp } from "../../../utils/math.js";
 import { syncForward } from "../../systems/carPhysics.js";
+import { getBotDifficulty } from "./difficulty.js";
 
 export function computeRecoveryAim({
     track,
@@ -41,29 +42,45 @@ export function tryUnstick({
     ai,
     track,
     idx,
-    p,
-    p2,
+    level,
     maxSpeed,
 }) {
-    if (ai.stuckTime <= 1.1) return { didUnstick: false, speedMulCap: 1.0 };
+    const diff = car.botDifficulty || getBotDifficulty(level);
+    if (ai.stuckTime <= diff.recoveryThreshold) return { didUnstick: false, speedMulCap: 1.0 };
 
     const c = track.pointAtIndex(idx);
-    car.x = lerp(car.x, c.x, 0.35);
-    car.y = lerp(car.y, c.y, 0.35);
+    const n = track.normalAtIndex(idx);
+    const t = track.tangentAtIndex(idx);
+    const laneOffset = (car.laneOffset || 0) * 0.5;
+    const targetX = c.x + n.x * laneOffset;
+    const targetY = c.y + n.y * laneOffset;
+    const dx = targetX - car.x;
+    const dy = targetY - car.y;
+    const move = Math.min(16, Math.hypot(dx, dy));
+    const inv = move > 0 ? 1 / Math.hypot(dx, dy) : 0;
+    car.x += dx * inv * move;
+    car.y += dy * inv * move;
 
-    const tdx = p2.x - p.x;
-    const tdy = p2.y - p.y;
-    car.angle = Math.atan2(tdy, tdx);
+    const targetAngle = Math.atan2(t.y, t.x);
+    car.angle = lerp(car.angle, targetAngle, 0.28);
     syncForward(car);
 
-    car.speed = Math.max(car.speed, maxSpeed * 0.25);
+    const forwardSpeed = car.vx * car.fx + car.vy * car.fy;
+    const lateralSpeed = car.vx * n.x + car.vy * n.y;
+    const relaunchSpeed = Math.max(28, Math.min(Math.max(car.speed, forwardSpeed), maxSpeed * 0.18));
+    car.vx = car.fx * relaunchSpeed + n.x * (lateralSpeed * 0.18);
+    car.vy = car.fy * relaunchSpeed + n.y * (lateralSpeed * 0.18);
+    car.speed = relaunchSpeed;
+    car.trackIdxHint = idx;
+    ai.lastProgressIdx = idx;
 
     ai.stuckTime = 0;
-    return { didUnstick: true, speedMulCap: 0.8 };
+    return { didUnstick: true, speedMulCap: diff.recoverySpeed };
 }
 
 export function computeLookahead(v01, level) {
-    return 18 + 22 * v01 + level * 1.2;
+    const diff = getBotDifficulty(level);
+    return 18 + 20 * v01 + diff.lookAheadBonus;
 }
 
 export function getTargetInfo(track, idx, lookAhead) {

@@ -1,23 +1,34 @@
 export function createInput() {
-    return { up: false, down: false, left: false, right: false };
+    return {
+        up: false,
+        down: false,
+        left: false,
+        right: false,
+        boostPressed: false,
+        drift: false,
+    };
 }
 
 export function bindKeys({ input, onRestart }) {
-    const on = (e, v) => {
-        const k = e.key.toLowerCase();
-        if (k === "arrowup" || k === "w") input.up = v;
-        if (k === "arrowdown" || k === "s") input.down = v;
-        if (k === "arrowleft" || k === "a") input.left = v;
-        if (k === "arrowright" || k === "d") input.right = v;
-        if (k === "r" && v === true) onRestart?.();
+    const on = (e, isPressed) => {
+        const key = e.key.toLowerCase();
+        if (key === "arrowup" || key === "w") input.up = isPressed;
+        if (key === "arrowdown" || key === "s") input.down = isPressed;
+        if (key === "arrowleft" || key === "a") input.left = isPressed;
+        if (key === "arrowright" || key === "d") input.right = isPressed;
+        if (key === " ") input.drift = isPressed;
+        if (key === "b" && isPressed) input.boostPressed = true;
+        if (key === "r" && isPressed) onRestart?.();
     };
 
-    window.addEventListener("keydown", (e) => on(e, true));
-    window.addEventListener("keyup", (e) => on(e, false));
+    const handleKeyDown = (e) => on(e, true);
+    const handleKeyUp = (e) => on(e, false);
 
-    // return unbind if you ever need it later
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
+
     return () => {
-        window.removeEventListener("keydown", (e) => on(e, true));
-        window.removeEventListener("keyup", (e) => on(e, false));
+        window.removeEventListener("keydown", handleKeyDown);
+        window.removeEventListener("keyup", handleKeyUp);
     };
 }

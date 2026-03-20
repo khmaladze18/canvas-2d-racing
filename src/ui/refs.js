@@ -25,6 +25,7 @@ export function getRefs() {
         loginBtn: req("loginBtn"),
         startBtn: req("startBtn"),
         nextLevelBtn: req("nextLevelBtn"),
+        audioToggleBtn: req("audioToggleBtn"),
 
         // Result screen restart
         restartBtn: req("restartBtn"),
@@ -41,16 +42,31 @@ export function getRefs() {
 
     const hud = {
         root: req("hud"),
+        mapRoot: req("hudMapShell"),
         name: req("hudName"),
         level: req("hudLevel"),
+        status: req("hudStatus"),
         pos: req("hudPos"),
         total: byId("hudTotal"), // optional (recommended by our HUD fix)
         speed: req("hudSpeed"),
         prog: req("hudProg"),
+        progFill: req("hudProgFill"),
+        map: req("hudMap"),
+        boostRoot: req("hudBoostShell"),
+        boostFill: req("hudBoostFill"),
+        boostTime: req("hudBoostTime"),
+        inventoryRoot: req("hudInventoryShell"),
+        inventoryCount: req("hudBoostInventory"),
+    };
+
+    const countdown = {
+        overlay: req("countdown-overlay"),
+        text: req("countdown-text"),
+        lights: [req("light-1"), req("light-2"), req("light-3")].filter(Boolean),
     };
 
     const carBtns = Array.from(document.querySelectorAll(".car-btn"));
     if (!carBtns.length) console.warn("[UI] No .car-btn elements found");
 
-    return { overlay, screens, inputs, buttons, result, hud, carBtns };
+    return { overlay, screens, inputs, buttons, result, hud, countdown, carBtns };
 }

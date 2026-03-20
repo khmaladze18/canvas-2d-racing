@@ -29,7 +29,9 @@ export function computeLaneAim(p, nx, ny, laneOffset) {
 export function refreshTrackIdxHint(car, track, ai) {
     if (track.closestIndex) {
         car.trackIdxHint = track.closestIndex(car.x, car.y, car.trackIdxHint);
-    } else if (track.distanceToCenter) {
+    }
+
+    if (track.distanceToCenter) {
         const res = track.distanceToCenter(car.x, car.y, car.trackIdxHint);
         car.trackIdxHint = res.idx;
         ai._centerDist = res.dist;

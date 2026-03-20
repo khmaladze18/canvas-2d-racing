@@ -1,12 +1,20 @@
 // src/entities/Car.js
 import { drawCar } from "../render/carRenderer.js";
+import {
+    applyCarStateDefaults,
+    applyCarTuning,
+    getCarRadius,
+    getCollisionBox,
+    getCollisionProfile,
+    getCollisionRadius,
+} from "./carConfig.js";
 import { updateBotCar } from "./controllers/BotController.js";
 import { updatePlayerCar } from "./controllers/PlayerController.js";
-import { syncForward } from "./systems/carPhysics.js";
+import { capSpeed, clampToRoad, syncForward } from "./systems/carPhysics.js";
 import { updateTrafficCar } from "./controllers/TrafficController.js";
 
 export class Car {
-    constructor({ name, color, x, y, isPlayer, level, model = "kart" }) {
+    constructor({ name, color, x, y, isPlayer, level, model = "sedan" }) {
         this.name = name;
         this.color = color;
         this.model = model;
@@ -32,26 +40,24 @@ export class Car {
         // progress tracking
         this.trackIdxHint = 0;
         this.progressDist = 0;
-
-        // tuning
-        const baseMax = isPlayer ? 420 : 380;
-        this.maxSpeed = baseMax + level * (isPlayer ? 10 : 18);
-
-        this.accel = isPlayer ? 680 : 620;
-        this.brake = isPlayer ? 840 : 700;
-        this.turnRate = isPlayer ? 3.2 : 2.7;
-
-        this.drag = isPlayer ? 2.6 : 2.3;
-        this.roll = isPlayer ? 110 : 95;
-        this.grip = isPlayer ? 10.5 : 9.0;
-
-        // AI state
-        this.laneOffset = 0;
-        this._ai = { speedNoise: 0, t: Math.random() * 1000 };
+        applyCarTuning(this, { isPlayer, level, model: this.model });
+        applyCarStateDefaults(this);
     }
 
     getRadius() {
-        return this.model === "kart" ? 10 : 12;
+        return getCarRadius(this.model);
+    }
+
+    getCollisionRadius() {
+        return getCollisionRadius(this.model);
+    }
+
+    getCollisionProfile() {
+        return getCollisionProfile(this.model);
+    }
+
+    getCollisionBox() {
+        return getCollisionBox(this.model);
     }
 
     updatePlayer(dt, input, track) {
@@ -62,12 +68,19 @@ export class Car {
         updateBotCar(this, dt, track, level);
     }
 
-    draw(ctx, cameraY) {
-        drawCar(ctx, this, cameraY);
+    draw(ctx, cameraX, cameraY) {
+        drawCar(ctx, this, cameraX, cameraY);
     }
 
     updateTraffic(dt, track) {
         updateTrafficCar(this, dt, track);
     }
 
+    _capSpeed() {
+        capSpeed(this);
+    }
+
+    _applyRoadClamp(track, radius, speedPenalty) {
+        clampToRoad(this, track, radius, speedPenalty);
+    }
 }

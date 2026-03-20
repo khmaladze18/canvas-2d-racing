@@ -287,12 +287,199 @@ function BUILDING(w = 90, h = 140, tint = "#0b1f3a") {
   </svg>`;
 }
 
+function GRANDSTAND() {
+  return `
+  <svg xmlns="http://www.w3.org/2000/svg" width="220" height="132" viewBox="0 0 220 132">
+    <defs>
+      <linearGradient id="roof" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#cfd8e3"/>
+        <stop offset="1" stop-color="#7d8794"/>
+      </linearGradient>
+      <linearGradient id="seat" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#2563eb"/>
+        <stop offset="1" stop-color="#0f3d8f"/>
+      </linearGradient>
+    </defs>
+    <path d="M18 48 L198 26 L208 36 L32 58 Z" fill="url(#roof)" opacity=".95"/>
+    <path d="M24 60 L176 42 L196 112 L42 120 Z" fill="#334155" opacity=".96"/>
+    <path d="M48 70 L162 56 L176 102 L62 108 Z" fill="url(#seat)" opacity=".9"/>
+    <g fill="#dbeafe" opacity=".75">
+      <rect x="58" y="74" width="92" height="5" rx="2"/>
+      <rect x="62" y="84" width="95" height="5" rx="2"/>
+      <rect x="66" y="94" width="96" height="5" rx="2"/>
+    </g>
+    <g stroke="#94a3b8" stroke-width="4" opacity=".85">
+      <line x1="42" y1="60" x2="42" y2="120"/>
+      <line x1="108" y1="52" x2="108" y2="120"/>
+      <line x1="182" y1="44" x2="182" y2="114"/>
+    </g>
+  </svg>`;
+}
+
+function HOSPITALITY() {
+  return `
+  <svg xmlns="http://www.w3.org/2000/svg" width="164" height="116" viewBox="0 0 164 116">
+    <defs>
+      <linearGradient id="body" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#f8fafc"/>
+        <stop offset="1" stop-color="#d6dee8"/>
+      </linearGradient>
+      <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#93c5fd"/>
+        <stop offset="1" stop-color="#1d4ed8"/>
+      </linearGradient>
+    </defs>
+    <rect x="16" y="28" width="132" height="74" rx="12" fill="url(#body)" opacity=".98"/>
+    <rect x="28" y="40" width="108" height="22" rx="7" fill="url(#glass)" opacity=".84"/>
+    <rect x="28" y="72" width="30" height="20" rx="5" fill="#cbd5e1"/>
+    <rect x="66" y="72" width="30" height="20" rx="5" fill="#cbd5e1"/>
+    <rect x="104" y="72" width="30" height="20" rx="5" fill="#cbd5e1"/>
+    <path d="M10 34 L82 10 L154 34" fill="none" stroke="#ef4444" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>`;
+}
+
+function TREE_CLUSTER() {
+  return `
+  <svg xmlns="http://www.w3.org/2000/svg" width="116" height="96" viewBox="0 0 116 96">
+    <g fill="#0a6a39">
+      <circle cx="30" cy="44" r="20"/>
+      <circle cx="54" cy="36" r="22"/>
+      <circle cx="80" cy="46" r="20"/>
+      <circle cx="60" cy="56" r="24"/>
+    </g>
+    <g fill="#08562f" opacity=".9">
+      <circle cx="44" cy="54" r="18"/>
+      <circle cx="76" cy="56" r="18"/>
+    </g>
+    <g fill="#4b2e1a" opacity=".9">
+      <rect x="26" y="58" width="7" height="18" rx="2"/>
+      <rect x="54" y="60" width="7" height="20" rx="2"/>
+      <rect x="78" y="60" width="7" height="18" rx="2"/>
+    </g>
+  </svg>`;
+}
+
+function GRASS_PIXEL() {
+  const dots = rects(180, (i) => {
+    const x = ((i * 23) % 256);
+    const y = ((i * 47) % 256);
+    const shade = i % 3 === 0 ? "#7c9130" : i % 3 === 1 ? "#9eb449" : "#889f39";
+    return `<rect x="${x}" y="${y}" width="2" height="2" fill="${shade}" opacity=".55"/>`;
+  });
+  return `
+  <svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+    <rect width="256" height="256" fill="#91a63d"/>
+    <g opacity=".9">${dots}</g>
+  </svg>`;
+}
+
+function GRASS_SHADE() {
+  return `
+  <svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+    <g fill="none" stroke="#53884a" stroke-opacity=".28" stroke-width="10">
+      <path d="M-20 36 C 60 12, 120 20, 280 48"/>
+      <path d="M-20 116 C 70 94, 136 102, 280 128"/>
+      <path d="M-20 196 C 90 170, 170 176, 280 206"/>
+    </g>
+  </svg>`;
+}
+
+function SERVICE_ROAD() {
+  const lines = rects(14, (i) => {
+    const y = 16 + i * 18;
+    const w = 170 + (i % 4) * 20;
+    const x = (i % 2) * 60 - 20;
+    return `<rect x="${x}" y="${y}" width="${w}" height="8" rx="4" fill="#c8c0a1" opacity=".28"/>`;
+  });
+  return `
+  <svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+    <rect width="256" height="256" fill="transparent"/>
+    <g>${lines}</g>
+    <g fill="none" stroke="#f4ead0" stroke-opacity=".26" stroke-width="2">
+      <path d="M16 20 H200"/>
+      <path d="M56 56 H236"/>
+      <path d="M10 128 H176"/>
+      <path d="M34 196 H228"/>
+    </g>
+  </svg>`;
+}
+
+function PADDOCK() {
+  const slabs = rects(10, (i) => {
+    const x = 18 + (i % 3) * 78;
+    const y = 16 + ((i / 3) | 0) * 58;
+    const w = 52 + (i % 2) * 10;
+    return `<rect x="${x}" y="${y}" width="${w}" height="28" rx="4" fill="#c6bfab" opacity=".28"/>`;
+  });
+  return `
+  <svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+    <rect width="256" height="256" fill="transparent"/>
+    <rect x="10" y="10" width="236" height="236" rx="20" fill="#c7c0aa" opacity=".07"/>
+    <g>${slabs}</g>
+    <g fill="none" stroke="#f3f4f6" stroke-opacity=".2" stroke-width="3">
+      <path d="M16 90 H240"/>
+      <path d="M16 150 H240"/>
+    </g>
+  </svg>`;
+}
+
+function CIRCUIT_BORDER() {
+  const blocks = rects(24, (i) => {
+    const x = i * 82;
+    const h = 54 + (i % 4) * 8;
+    const body = i % 3 === 0 ? "#67717a" : i % 3 === 1 ? "#4d5761" : "#7a848e";
+    return `
+      <g transform="translate(${x},0)">
+        <rect x="10" y="${102 - h}" width="58" height="${h}" rx="8" fill="${body}" opacity=".18"/>
+        <rect x="16" y="${110 - h}" width="46" height="10" rx="4" fill="#f0e8cf" opacity=".18"/>
+      </g>`;
+  });
+  return `
+  <svg xmlns="http://www.w3.org/2000/svg" width="1920" height="160" viewBox="0 0 1920 160">
+    <rect width="1920" height="160" fill="transparent"/>
+    <rect y="124" width="1920" height="36" fill="#b3c45a" opacity=".28"/>
+    <g>${blocks}</g>
+  </svg>`;
+}
+
+function SHRUB() {
+  return `
+  <svg xmlns="http://www.w3.org/2000/svg" width="56" height="44" viewBox="0 0 56 44">
+    <g fill="#657427">
+      <circle cx="16" cy="24" r="10"/>
+      <circle cx="28" cy="18" r="12"/>
+      <circle cx="40" cy="24" r="10"/>
+      <circle cx="28" cy="28" r="11"/>
+    </g>
+    <g fill="#4f5d1f" opacity=".85">
+      <circle cx="21" cy="22" r="6"/>
+      <circle cx="34" cy="24" r="7"/>
+    </g>
+  </svg>`;
+}
+
+function BOX_BUILDING() {
+  return `
+  <svg xmlns="http://www.w3.org/2000/svg" width="118" height="86" viewBox="0 0 118 86">
+    <rect x="10" y="18" width="98" height="54" rx="6" fill="#bf3f35"/>
+    <rect x="16" y="12" width="86" height="12" rx="4" fill="#92251f"/>
+    <rect x="20" y="30" width="22" height="14" rx="3" fill="#e8d9c0" opacity=".85"/>
+    <rect x="48" y="30" width="22" height="14" rx="3" fill="#e8d9c0" opacity=".85"/>
+    <rect x="76" y="30" width="22" height="14" rx="3" fill="#e8d9c0" opacity=".85"/>
+  </svg>`;
+}
+
 // ----------
 // Export tiles (cached)
 // ----------
 export const TILES = {
   // background
   sky: cachedImg("sky:aurora:default", () => SKY_AURORA()),
+  grassPixel: cachedImg("ground:grasspixel:v1", () => GRASS_PIXEL()),
+  grassShade: cachedImg("ground:grassshade:v1", () => GRASS_SHADE()),
+  serviceRoad: cachedImg("ground:serviceroad:v1", () => SERVICE_ROAD()),
+  paddock: cachedImg("ground:paddock:v1", () => PADDOCK()),
+  circuitBorder: cachedImg("ground:circuitborder:v1", () => CIRCUIT_BORDER()),
   noise: cachedImg("noise:tile", NOISE_TILE),
   skyline: cachedImg("skyline:city:v1", CITY_SKYLINE),
   hills: cachedImg("hills:forest:v1", FOREST_HILLS),
@@ -302,6 +489,11 @@ export const TILES = {
 
   // props
   tree: cachedImg("prop:tree:default", () => TREE()),
+  treeCluster: cachedImg("prop:treecluster:default", () => TREE_CLUSTER()),
+  shrub: cachedImg("prop:shrub:default", () => SHRUB()),
+  boxBuilding: cachedImg("prop:boxbuilding:default", () => BOX_BUILDING()),
   lamp: cachedImg("prop:lamp:default", () => LAMP()),
   building: cachedImg("prop:building:default", () => BUILDING()),
+  grandstand: cachedImg("prop:grandstand:default", () => GRANDSTAND()),
+  hospitality: cachedImg("prop:hospitality:default", () => HOSPITALITY()),
 };

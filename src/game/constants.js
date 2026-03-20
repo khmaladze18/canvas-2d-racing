@@ -16,7 +16,7 @@ export const STATES = Object.freeze({
 
 export const RACE_CONFIG = Object.freeze({
     SPAWN_INDEX: 80,
-    BOT_COUNT: 4,
+    BOT_COUNT: 5,
 });
 
 // -----------------------------
@@ -24,8 +24,10 @@ export const RACE_CONFIG = Object.freeze({
 // -----------------------------
 
 export const GRID = Object.freeze({
-    laneX: 22,
-    rowY: 34,
+    laneX: 30,
+    rowY: 52,
+    slotW: 28,
+    slotH: 48,
 });
 
 // -----------------------------
@@ -33,5 +35,5 @@ export const GRID = Object.freeze({
 // -----------------------------
 
 export const BOT_CONFIG = Object.freeze({
-    COLORS: ["#ff3b3b", "#2d7dff", "#ffd400", "#00d47a"],
+    COLORS: ["#ff3b3b", "#2d7dff", "#ffd400", "#00d47a", "#f97316"],
 });

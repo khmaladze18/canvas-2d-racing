@@ -1,17 +1,18 @@
-// src/Game.js
 import { STATES } from "./constants.js";
 import { createInput, bindKeys } from "./input.js";
 import { bindUI } from "./uiBindings.js";
+import { createPickups } from "./pickups.js";
 import { startLevel } from "./level.js";
 import { update } from "./update.js";
 import { render } from "./render.js";
 import { createTrafficManager } from "../entities/trafic/traffic.js";
 
 export class Game {
-    constructor({ canvas, ctx, ui }) {
+    constructor({ canvas, ctx, ui, audio = null }) {
         this.canvas = canvas;
         this.ctx = ctx;
         this.ui = ui;
+        this.audio = audio;
 
         this.state = STATES.LOGIN;
         this.playerName = "";
@@ -24,14 +25,17 @@ export class Game {
         this.player = null;
         this.bots = [];
         this.all = [];
-
-        // ✅ Traffic obstacle system (created once, reset per run/level)
         this.traffic = createTrafficManager(this);
 
+        this.cameraX = 0;
         this.cameraY = 0;
         this.input = createInput();
+        this.pickups = [];
+        this.impactFx = [];
+        this.fxTime = 0;
 
         this.startDist = 0;
+        this.raceStarted = false;
         this.lastT = performance.now();
 
         bindUI(this);
@@ -42,18 +46,18 @@ export class Game {
         this.playerName = name;
     }
 
+    playSound(kind, data) {
+        this.audio?.play?.(kind, data);
+    }
+
     goToCarSelect() {
         this.state = "CAR";
         this.ui.showCarSelect();
     }
 
-    startNewRun(color) {
+    async startNewRun(color) {
         this.playerColor = color;
-        this.startLevel(1);
-    }
-
-    isInRun() {
-        return this.state === "PLAY" || this.state === "RESULT";
+        await this.startLevel(1);
     }
 
     startBoot() {
@@ -61,21 +65,21 @@ export class Game {
         this._loop(performance.now());
     }
 
-    restartRun() {
+    async restartRun() {
         this.level = 1;
         this.bestLevel = 1;
-
-        // ✅ reset traffic for a clean run
         this.traffic?.reset?.();
-
-        this.startLevel(1);
+        await this.startLevel(1);
     }
 
-    startLevel(level) {
-        // ✅ reset traffic when starting a new level (new track)
+    async startLevel(level) {
         this.traffic?.reset?.();
-
         startLevel(this, level);
+        this.pickups = createPickups(this.track);
+        this.impactFx = [];
+        this.raceStarted = false;
+        await this.ui.startCountdown?.();
+        this.raceStarted = true;
     }
 
     endLevel(place) {
@@ -83,11 +87,12 @@ export class Game {
             this.state = STATES.RESULT;
             this.ui.setResult({ place, level: this.level });
             this.ui.showResult();
-        } else {
-            this.state = STATES.OVER;
-            this.ui.setGameOver({ bestLevel: this.level, place });
-            this.ui.showGameOver();
+            return;
         }
+
+        this.state = STATES.OVER;
+        this.ui.setGameOver({ bestLevel: this.level, place });
+        this.ui.showGameOver();
     }
 
     _loop(t) {
@@ -97,6 +102,6 @@ export class Game {
         update(this, dt);
         render(this);
 
-        requestAnimationFrame((tt) => this._loop(tt));
+        requestAnimationFrame((nextTime) => this._loop(nextTime));
     }
 }

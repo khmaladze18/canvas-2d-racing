@@ -1,7 +1,5 @@
 export function createScreens(refs) {
     const overlay = refs.overlay;
-
-    // Build a safe list (skip nulls)
     const screens = {
         login: refs.screens.login,
         car: refs.screens.car,
@@ -10,14 +8,11 @@ export function createScreens(refs) {
     };
 
     const list = Object.values(screens).filter(Boolean);
-
     let activeKey = null;
 
     function setOverlayVisible(isVisible) {
         if (!overlay) return;
         overlay.style.display = isVisible ? "" : "none";
-        // overlay in CSS has pointer-events:none; screens are pointer-events:auto
-        // When hidden, we fully disable it
         overlay.setAttribute("aria-hidden", isVisible ? "false" : "true");
     }
 
@@ -26,7 +21,6 @@ export function createScreens(refs) {
     }
 
     function focusFor(key) {
-        // Focus “best” element per screen (AAA polish)
         if (key === "login") refs.inputs?.nameInput?.focus?.();
         else if (key === "car") refs.carBtns?.[0]?.focus?.();
         else if (key === "result") refs.buttons?.nextLevelBtn?.focus?.();
@@ -43,10 +37,7 @@ export function createScreens(refs) {
         clearActive();
         screenEl.classList.add("active");
         activeKey = key;
-
         setOverlayVisible(true);
-
-        // Focus after the DOM class applies
         queueMicrotask(() => focusFor(key));
     }
 
@@ -56,12 +47,11 @@ export function createScreens(refs) {
         setOverlayVisible(false);
     }
 
-    // Backward-compatible API: show(el)
     function show(screenEl) {
         if (!screenEl) return;
         clearActive();
         screenEl.classList.add("active");
-        activeKey = null; // unknown key when direct element is used
+        activeKey = null;
         setOverlayVisible(true);
     }
 

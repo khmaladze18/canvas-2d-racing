@@ -6,14 +6,14 @@ export function makeTrackConfig(level) {
     const difficulty = 1 - Math.pow(1 - t, 2); // smooth ramp (easeOutQuad)
 
     return {
-        // Road gradually narrows but never becomes impossible
-        roadHalfWidth: Math.max(48, 120 - difficulty * 60),
+        // Keep GP tracks wide and readable.
+        roadHalfWidth: Math.max(62, 132 - difficulty * 44),
 
-        // Curves increase but cap at a safe limit
-        curveStrength: 0.55 + difficulty * 0.8,
+        // Higher levels make corner sections more committed.
+        curveStrength: 0.34 + difficulty * 0.38,
 
-        // Slightly shorter segments at high levels = tighter curves
-        segmentLen: 16 - difficulty * 4,
+        // Keep pace high on straights while letting corners bite more at higher levels.
+        segmentLen: 18 - difficulty * 2.5,
 
         // Track gets longer over time
         numPoints: 1500 + lvl * 40,

@@ -1,18 +1,18 @@
 export const THEMES = [
     {
-        name: "forest",
-        layers: ["sky", "hills", "noise"],
-        props: ["tree"],
+        name: "circuitA",
+        layers: ["grassPixel", "serviceRoad", "paddock", "circuitBorder", "noise"],
+        props: ["shrub", "boxBuilding", "shrub", "lamp"],
     },
     {
-        name: "city",
-        layers: ["sky", "skyline", "noise"],
-        props: ["building", "lamp"],
+        name: "circuitB",
+        layers: ["grassPixel", "serviceRoad", "paddock", "circuitBorder", "noise"],
+        props: ["shrub", "boxBuilding", "shrub"],
     },
     {
-        name: "bridge",
-        layers: ["sky", "water", "noise"],
-        props: ["lamp"],
+        name: "circuitC",
+        layers: ["grassPixel", "serviceRoad", "paddock", "circuitBorder", "noise"],
+        props: ["shrub", "lamp", "boxBuilding", "shrub"],
     },
 ];
 

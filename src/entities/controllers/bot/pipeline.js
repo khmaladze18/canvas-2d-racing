@@ -3,8 +3,11 @@ import { clamp } from "../../../utils/math.js";
 import {
     dtSafe,
     updateSpeed,
+    updateManualBoost,
+    accelerateForward,
     applyDrag,
     applyGrip,
+    applyStability,
     capSpeed,
     integrate,
     clampToRoad,
@@ -50,8 +53,16 @@ export function updateBotCar(car, dt, track, level) {
     updateStuck(ai, dt, prog);
 
     let speedMul = recSpeedMul;
-    const unstick = tryUnstick({ car, ai, track, idx, p, p2, maxSpeed: max });
+    const unstick = tryUnstick({ car, ai, track, idx, level, maxSpeed: max });
     if (unstick.didUnstick) speedMul = Math.min(speedMul, unstick.speedMulCap);
+    const boostTrigger =
+        (car.boostInventory || 0) > 0 &&
+        !car.manualBoostActive &&
+        recSpeedMul > 0.95 &&
+        Math.abs(delta) < Math.max(0.03, maxTurn * 0.45) &&
+        car.speed > max * 0.48;
+
+    updateManualBoost(car, dt, boostTrigger);
 
     // 6) speed
     const desired = computeDesiredSpeed({
@@ -64,10 +75,12 @@ export function updateBotCar(car, dt, track, level) {
         maxTurn,
     });
     applySpeedControl(car, dt, desired);
+    if (car.manualBoostActive) accelerateForward(car, dt, car.accel * 0.78);
 
     // physics
     applyDrag(car, dt);
     applyGrip(car, dt);
+    applyStability(car, dt);
     capSpeed(car);
     integrate(car, dt);
 

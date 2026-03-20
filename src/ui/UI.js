@@ -2,20 +2,12 @@ import { getRefs } from "./refs.js";
 import { createScreens } from "./screens.js";
 import { createHud } from "./hud.js";
 import { createCarSelect } from "./carSelect.js";
-
-function ordinal(n) {
-    const v = n % 100;
-    if (v >= 11 && v <= 13) return `${n}th`;
-    switch (n % 10) {
-        case 1: return `${n}st`;
-        case 2: return `${n}nd`;
-        case 3: return `${n}rd`;
-        default: return `${n}th`;
-    }
-}
+import { playCountdown } from "./countdown.js";
+import { ordinal } from "./format.js";
 
 export class UI {
-    constructor() {
+    constructor(audio = null) {
+        this.audio = audio;
         this.refs = getRefs();
 
         this.screens = createScreens(this.refs);
@@ -33,6 +25,7 @@ export class UI {
     get loginBtn() { return this.refs.buttons.loginBtn; }
     get startBtn() { return this.refs.buttons.startBtn; }
     get nextLevelBtn() { return this.refs.buttons.nextLevelBtn; }
+    get audioToggleBtn() { return this.refs.buttons.audioToggleBtn; }
 
     get restartBtn() { return this.refs.buttons.restartBtn; }
     // NEW: game over restart button (with fallback already handled in refs.js)
@@ -68,6 +61,10 @@ export class UI {
 
     hideOverlay() {
         this.screens.hideOverlay();
+    }
+
+    async startCountdown() {
+        await playCountdown(this.refs.countdown, this.audio);
     }
 
     // --- HUD ---
